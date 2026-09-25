@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Paranacito Pesca | Sorteos</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+    <header class="hero">
+
+        <div class="hero-contenido">
+
+            <img
+                src="{{ url_for('static', filename='img/logo-paranasito.jpeg') }}"
+                alt="Paranacito Pesca"
+                class="logo"
+            >
+
+            <div class="hero-info">
+
+                <span class="hero-etiqueta">
+                    PESCA • CAMPING • SORTEOS
+                </span>
+
+                <h1>
+                    Paranacito
+                    <span>Pesca</span>
+                </h1>
+
+                <p>
+                    Participá de nuestros sorteos
+                    y llevate grandes premios.
+                </p>
+
+                <a
+                    href="#sorteos"
+                    class="hero-boton"
+                >
+                    Ver sorteos
+                </a>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <main id="sorteos">
+
+        <h2 class="titulo-seccion">
+            Sorteos disponibles
+        </h2>
+
+        {% for sorteo in sorteos %}
+
+            <article class="sorteo-card">
+
+                {% set imagenes = (
+                    sorteo.multimedia
+                    | selectattr("tipo", "equalto", "imagen")
+                    | list
+                ) %}
+
+                {% set videos = (
+                    sorteo.multimedia
+                    | selectattr("tipo", "equalto", "video")
+                    | list
+                ) %}
+
+                {% if imagenes %}
+
+                    {% set imagen_principal = (
+                        imagenes
+                        | selectattr("principal", "equalto", true)
+                        | first
+                    ) %}
+
+                    {% if not imagen_principal %}
+                        {% set imagen_principal = imagenes[0] %}
+                    {% endif %}
+
+                    <div
+                        class="galeria"
+                        data-galeria="{{ sorteo.id }}"
+                    >
+
+                        <div class="galeria-principal">
+
+                            <img
+                                class="imagen-principal"
+                                src="{{ url_for('static', filename=imagen_principal.url) }}"
+                                alt="{{ sorteo.titulo }}"
+                            >
+
+                            {% if imagenes|length > 1 %}
+
+                                <button
+                                    type="button"
+                                    class="galeria-flecha anterior"
+                                    aria-label="Imagen anterior"
+                                >
+                                    &#10094;
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="galeria-flecha siguiente"
+                                    aria-label="Imagen siguiente"
+                                >
+                                    &#10095;
+                                </button>
+
+                            {% endif %}
+
+                        </div>
+
+                        {% if imagenes|length > 1 %}
+
+                            <div class="galeria-miniaturas">
+
+                                {% for multimedia in imagenes %}
+
+                                    {% if multimedia.tipo == "imagen" %}
+
+                                        <button
+                                            type="button"
+                                            class="miniatura {% if loop.first %}activa{% endif %}"
+                                            data-indice="{{ loop.index0 }}"
+                                        >
+
+                                            <img
+                                                src="{{ url_for('static', filename=multimedia.url) }}"
+                                                alt="Foto {{ loop.index }} de {{ sorteo.titulo }}"
+                                            >
+
+                                        </button>
+
+                                    {% endif %}
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endif %}
+
+                {% if videos %}
+
+                    <div class="videos-sorteo">
+
+                        {% for video in videos %}
+
+                            {% set reproductor = preparar_video(video.url) %}
+
+                            <div class="video-sorteo">
+
+                                {% if reproductor.tipo == "youtube"
+                                      or reproductor.tipo == "vimeo" %}
+
+                                    <iframe
+                                        src="{{ reproductor.url }}"
+                                        title="Video de {{ sorteo.titulo }}"
+                                        loading="lazy"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowfullscreen
+                                    ></iframe>
+
+                                {% elif reproductor.tipo == "directo" %}
+
+                                    <video
+                                        controls
+                                        preload="metadata"
+                                    >
+                                        <source src="{{ reproductor.url }}">
+                                        Tu navegador no puede reproducir este video.
+                                    </video>
+
+                                {% else %}
+
+                                    <a
+                                        href="{{ reproductor.url }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="video-enlace-externo"
+                                    >
+                                        ▶ Ver video
+                                    </a>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+                <span class="etiqueta">
+                    SORTEO ACTIVO
+                </span>
+
+                <h2>
+                    {{ sorteo.titulo }}
+                </h2>
+
+                <p class="descripcion">
+                    {{ sorteo.descripcion }}
+                </p>
+
+                <p class="precio">
+                    ${{ sorteo.precio_numero | moneda }}
+                    <span>por número</span>
+                </p>
+
+                <p class="limite">
+                    Podés obtener hasta
+                    <strong>
+                        {{ sorteo.max_numeros_por_persona }}
+                    </strong>
+                    números.
+                </p>
+
+                <a
+                    href="{{ url_for('participar', sorteo_id=sorteo.id) }}"
+                    class="btn-participar"
+                >
+                    Participar del sorteo
+                </a>
+
+            </article>
+
+        {% else %}
+
+            <p class="sin-sorteos">
+                No hay sorteos disponibles actualmente.
+            </p>
+
+        {% endfor %}
+
+    </main>
+
+    <section class="redes-sociales">
+
+        <span class="redes-subtitulo">
+            PARANACITO PESCA
+        </span>
+
+        <h2>¿Tenés alguna consulta?</h2>
+
+        <p>
+            Escribinos o seguinos en nuestras redes.
+        </p>
+
+        <div class="redes-botones">
+
+            <a
+                href="https://wa.me/5491176413389?text=Hola%2C%20vengo%20desde%20la%20p%C3%A1gina%20de%20Paranacito%20Pesca%20y%20quer%C3%ADa%20hacer%20una%20consulta."
+                target="_blank"
+                rel="noopener noreferrer"
+                class="red-social whatsapp"
+            >
+                <svg class="icono-red" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.198.297-.767.966-.94 1.164-.173.198-.347.223-.644.074-.297-.148-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.009-.371-.011-.57-.011-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479s1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.693.625.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                    <path d="M12.004 2C6.477 2 2 6.477 2 12c0 1.76.458 3.412 1.257 4.848L2 22l5.304-1.236A9.958 9.958 0 0 0 12.004 22C17.526 22 22 17.523 22 12S17.526 2 12.004 2zm0 18.182a8.15 8.15 0 0 1-4.154-1.137l-.298-.177-3.147.734.746-3.066-.194-.315A8.14 8.14 0 0 1 3.822 12c0-4.514 3.67-8.182 8.182-8.182 4.51 0 8.178 3.668 8.178 8.182 0 4.514-3.668 8.182-8.178 8.182z"/>
+                </svg>
+                <span>WhatsApp</span>
+            </a>
+
+            <a
+                href="https://www.instagram.com/paranacito_pesca/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="red-social instagram"
+            >
+                <svg class="icono-red" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm5.5-3.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5z"/>
+                </svg>
+                <span>Instagram</span>
+            </a>
+
+            <a
+                href="https://www.facebook.com/Paranacitopesca"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="red-social facebook"
+            >
+                <svg class="icono-red" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M14 8h3V4.5c-.52-.07-2.31-.22-4.44-.22-4.45 0-7.5 2.72-7.5 7.72v4.31H2v3.91h3.06V24h4.75v-3.78h3.93l.62-3.91H9.81v-3.92c0-1.13.31-1.9 1.95-1.9H14V8z" transform="translate(3 0) scale(.75)"/>
+                </svg>
+                <span>Facebook</span>
+            </a>
+
+        </div>
+
+    </section>
+
+    <footer>
+        <strong>Paranacito Pesca</strong>
+        <p>Pesca • Camping • Sorteos</p>
+    </footer>
+
+    <script
+        src="{{ url_for('static', filename='js/main.js') }}"
+    ></script>
+
+</body>
+
+</html>

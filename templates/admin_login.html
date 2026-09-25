@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Administración | Paranacito Pesca</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <main class="login-admin">
+
+        <div class="login-admin-card">
+
+            <span class="admin-subtitulo">
+                PARANACITO PESCA
+            </span>
+
+            <h1>Administración</h1>
+
+            <p>
+                Ingresá para administrar tus sorteos.
+            </p>
+
+            {% if error %}
+
+                <div class="login-error">
+                    {{ error }}
+                </div>
+
+            {% endif %}
+
+            <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <label for="usuario">
+                    Usuario
+                </label>
+
+                <input
+                    id="usuario"
+                    name="usuario"
+                    type="text"
+                    autocomplete="username"
+                    required
+                >
+
+                <label for="password">
+                    Contraseña
+                </label>
+
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button type="submit">
+                    Ingresar
+                </button>
+
+            </form>
+
+            <a
+                href="{{ url_for('inicio') }}"
+                class="login-volver"
+            >
+                ← Volver al sitio
+            </a>
+
+        </div>
+
+    </main>
+
+</body>
+
+</html>

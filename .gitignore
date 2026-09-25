@@ -1,0 +1,28 @@
+.env
+venv/
+__pycache__/
+*.pyc
+instance/
+
+# Backups y archivos temporales
+*.backup
+*.backup_*
+*.save
+.env.*
+*.pyx
+
+# Archivos de prueba/diagnóstico locales
+diagnostico.py
+comprobar_*.py
+probar_*.py
+
+# Scripts locales de migracion/desarrollo antiguos
+actualizar_db.py
+agregar_*.py
+cargar_numeros.py
+crear_tabla_*.py
+vencer_participaciones.py
+*.backup*
+
+# Archivos subidos por el administrador
+static/uploads/sorteos/*

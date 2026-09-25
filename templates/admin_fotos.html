@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Fotos de {{ sorteo.titulo }} | Paranacito Pesca
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <main class="admin-formulario admin-fotos-contenedor">
+
+        <a
+            href="{{ url_for('admin_sorteos') }}"
+            class="admin-volver"
+        >
+            ← Volver a mis sorteos
+        </a>
+
+        <span class="admin-subtitulo">
+            PARANACITO PESCA
+        </span>
+
+        <h1>Fotos del sorteo</h1>
+
+        <p class="admin-formulario-ayuda">
+            {{ sorteo.titulo }}
+        </p>
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% if mensajes %}
+                <div class="admin-mensajes">
+                    {% for categoria, mensaje in mensajes %}
+                        <div class="admin-mensaje admin-mensaje-{{ categoria }}">
+                            {{ mensaje }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="admin-galeria-fotos">
+
+            {% for imagen in imagenes %}
+
+                <article class="admin-foto">
+
+                    <img
+                        src="{{ url_for(
+                            'static',
+                            filename=imagen.url
+                        ) }}"
+                        alt="Foto de {{ sorteo.titulo }}"
+                    >
+
+                    {% if imagen.principal %}
+
+                        <span class="foto-principal">
+                            PRINCIPAL
+                        </span>
+
+                    {% endif %}
+
+
+                    <div class="foto-acciones">
+
+                        {% if not imagen.principal %}
+
+                            <form
+                                method="POST"
+                                action="{{ url_for(
+                                    'hacer_foto_principal',
+                                    sorteo_id=sorteo.id,
+                                    foto_id=imagen.id
+                                ) }}"
+                            >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <button
+                                    type="submit"
+                                    class="foto-boton principal"
+                                >
+                                    Hacer principal
+                                </button>
+
+                            </form>
+
+                        {% endif %}
+
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'eliminar_foto',
+                                sorteo_id=sorteo.id,
+                                foto_id=imagen.id
+                            ) }}"
+                            onsubmit="return confirm(
+                                '¿Seguro que querés eliminar esta foto?'
+                            );"
+                        >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                            <button
+                                type="submit"
+                                class="foto-boton eliminar"
+                            >
+                                Eliminar
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </article>
+
+            {% else %}
+
+                <p>
+                    Este sorteo todavía no tiene fotos.
+                </p>
+
+            {% endfor %}
+
+        </section>
+
+
+        <section class="admin-subir-fotos">
+
+            <h2>Agregar fotos</h2>
+
+            <p>
+                Podés seleccionar varias imágenes.
+            </p>
+
+            <form
+                method="POST"
+                enctype="multipart/form-data"
+            >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <input
+                    type="file"
+                    name="imagenes"
+                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                    multiple
+                    required
+                >
+
+                <button
+                    type="submit"
+                    class="btn-participar"
+                >
+                    Subir imágenes
+                </button>
+
+            </form>
+
+        </section>
+
+
+        <section class="admin-videos">
+
+            <h2>Videos del sorteo</h2>
+
+            {% if videos %}
+
+                <div class="admin-lista-videos">
+
+                    {% for video in videos %}
+
+                        <article class="admin-video-item">
+
+                            <div class="admin-video-info">
+
+                                <strong>
+                                    Video {{ loop.index }}
+                                </strong>
+
+                                <span>
+                                    {{ video.url }}
+                                </span>
+
+                            </div>
+
+                            <div class="admin-video-acciones">
+
+                                <a
+                                    href="{{ video.url }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="foto-boton principal"
+                                >
+                                    Abrir video
+                                </a>
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'eliminar_video',
+                                        sorteo_id=sorteo.id,
+                                        video_id=video.id
+                                    ) }}"
+                                    onsubmit="return confirm(
+                                        '¿Seguro que querés eliminar este video?'
+                                    );"
+                                >
+
+                                    <input
+                                        type="hidden"
+                                        name="csrf_token"
+                                        value="{{ csrf_token() }}"
+                                    >
+
+                                    <button
+                                        type="submit"
+                                        class="foto-boton eliminar"
+                                    >
+                                        Eliminar
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <p>
+                    Este sorteo todavía no tiene videos.
+                </p>
+
+            {% endif %}
+
+        </section>
+
+
+        <section class="admin-subir-fotos admin-agregar-video">
+
+            <h2>Agregar video</h2>
+
+            <p>
+                Pegá el enlace del video. Puede ser de YouTube,
+                Vimeo o un enlace directo a un video.
+            </p>
+
+            <form method="POST">
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <label for="url_video">
+                    Enlace del video
+                </label>
+
+                <input
+                    type="url"
+                    id="url_video"
+                    name="url_video"
+                    placeholder="https://..."
+                    required
+                >
+
+                <button
+                    type="submit"
+                    class="btn-participar"
+                >
+                    Agregar video
+                </button>
+
+            </form>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nuevo sorteo | Paranacito Pesca</title>
+
+<style>
+    #vista-previa {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin: 20px 0;
+    }
+
+    .imagen-seleccionada {
+        position: relative;
+        width: 140px;
+        height: 110px;
+    }
+
+    .imagen-seleccionada img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+
+    .imagen-seleccionada button {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+
+        width: 28px;
+        height: 28px;
+
+        border: none;
+        border-radius: 50%;
+
+        background: #111;
+        color: white;
+
+        font-size: 20px;
+        cursor: pointer;
+    }
+</style>
+
+</head>
+
+<body>
+
+    <h1>Crear nuevo sorteo</h1>
+
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+    >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="titulo">
+            Título
+        </label>
+
+        <input
+            type="text"
+            name="titulo"
+            id="titulo"
+            required
+        >
+
+        <br><br>
+
+        <label for="descripcion">
+            Descripción
+        </label>
+
+        <textarea
+            name="descripcion"
+            id="descripcion"
+        ></textarea>
+
+        <br><br>
+
+        <label for="precio_numero">
+            Precio por número
+        </label>
+
+        <input
+            type="number"
+            name="precio_numero"
+            id="precio_numero"
+            min="0"
+            required
+        >
+
+        <br><br>
+
+        <label for="max_numeros_por_persona">
+            Máximo de números por persona
+        </label>
+
+        <input
+            type="number"
+            name="max_numeros_por_persona"
+            id="max_numeros_por_persona"
+            min="1"
+            value="1"
+            required
+        >
+
+        <br><br>
+
+        <label for="cantidad_numeros">
+            Cantidad de números del sorteo
+        </label>
+
+        <input
+            type="number"
+            name="cantidad_numeros"
+            id="cantidad_numeros"
+            min="1"
+            value="100"
+            required
+        >
+
+        <br><br>
+
+        <hr>
+
+        <h2>Fotos del premio</h2>
+
+        <p>
+            Agregá una o varias fotos. Podés hacerlo
+            varias veces sin perder las anteriores.
+        </p>
+
+        <input
+            type="file"
+            id="selector-imagenes"
+            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+            multiple
+        >
+
+        <!-- Este input es el que realmente se envía a Flask -->
+        <input
+            type="file"
+            name="imagenes"
+            id="imagenes"
+            multiple
+            hidden
+        >
+
+        <p id="contador-imagenes">
+            Ninguna imagen seleccionada.
+        </p>
+
+        <div id="vista-previa"></div>
+
+        <small>
+            Formatos permitidos: JPG, JPEG, PNG y WEBP.
+        </small>
+
+        <br><br>
+
+        <button type="submit">
+            Crear sorteo
+        </button>
+
+    </form>
+
+
+<script>
+    const selector = document.getElementById(
+        "selector-imagenes"
+    );
+
+    const inputReal = document.getElementById(
+        "imagenes"
+    );
+
+    const vistaPrevia = document.getElementById(
+        "vista-previa"
+    );
+
+    const contador = document.getElementById(
+        "contador-imagenes"
+    );
+
+    let archivosSeleccionados = [];
+
+    selector.addEventListener("change", function () {
+
+        for (const archivo of selector.files) {
+
+            const repetido = archivosSeleccionados.some(
+                existente =>
+                    existente.name === archivo.name &&
+                    existente.size === archivo.size &&
+                    existente.lastModified === archivo.lastModified
+            );
+
+            if (!repetido) {
+                archivosSeleccionados.push(archivo);
+            }
+        }
+
+        selector.value = "";
+
+        actualizarArchivos();
+    });
+
+
+    function actualizarArchivos() {
+
+        const transferencia = new DataTransfer();
+
+        archivosSeleccionados.forEach(
+            archivo => transferencia.items.add(archivo)
+        );
+
+        inputReal.files = transferencia.files;
+
+        mostrarVistaPrevia();
+    }
+
+
+    function mostrarVistaPrevia() {
+
+        vistaPrevia.innerHTML = "";
+
+        if (archivosSeleccionados.length === 0) {
+
+            contador.textContent =
+                "Ninguna imagen seleccionada.";
+
+            return;
+        }
+
+        contador.textContent =
+            archivosSeleccionados.length +
+            (archivosSeleccionados.length === 1
+                ? " imagen seleccionada."
+                : " imágenes seleccionadas.");
+
+        archivosSeleccionados.forEach(
+            (archivo, indice) => {
+
+                const contenedor =
+                    document.createElement("div");
+
+                contenedor.className =
+                    "imagen-seleccionada";
+
+                const imagen =
+                    document.createElement("img");
+
+                imagen.src =
+                    URL.createObjectURL(archivo);
+
+                imagen.alt = archivo.name;
+
+                const boton =
+                    document.createElement("button");
+
+                boton.type = "button";
+                boton.textContent = "×";
+                boton.title = "Quitar imagen";
+
+                boton.addEventListener(
+                    "click",
+                    function () {
+
+                        archivosSeleccionados.splice(
+                            indice,
+                            1
+                        );
+
+                        actualizarArchivos();
+                    }
+                );
+
+                contenedor.appendChild(imagen);
+                contenedor.appendChild(boton);
+
+                vistaPrevia.appendChild(contenedor);
+            }
+        );
+    }
+</script>
+
+</body>
+
+</html>

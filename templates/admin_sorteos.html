@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Administrar sorteos | Paranacito Pesca
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <main class="admin-contenedor">
+
+        <div class="admin-encabezado">
+
+            <div>
+                <span class="admin-subtitulo">
+                    PARANACITO PESCA
+                </span>
+
+                <h1>
+                    Mis sorteos
+                </h1>
+            </div>
+
+            <div class="admin-acciones-principales">
+
+                <a
+                    href="{{ url_for('nuevo_sorteo') }}"
+                    class="btn-participar"
+                >
+                    + Nuevo sorteo
+                </a>
+
+                <form
+                    method="POST"
+                    action="{{ url_for('admin_logout') }}"
+                >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button
+                        type="submit"
+                        class="btn-cerrar-sesion"
+                    >
+                        Cerrar sesión
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+
+
+        {% for sorteo in sorteos %}
+
+            <article class="admin-sorteo">
+
+                <div class="admin-imagen">
+
+                    {% if sorteo.multimedia %}
+
+                        <img
+                            src="{{ url_for(
+                                'static',
+                                filename=sorteo.multimedia[0].url
+                            ) }}"
+                            alt="{{ sorteo.titulo }}"
+                        >
+
+                    {% else %}
+
+                        <div class="admin-sin-imagen">
+                            Sin imagen
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="admin-info">
+
+                    {% if sorteo.activo %}
+
+                        <span class="admin-estado activo">
+                            ACTIVO
+                        </span>
+
+                    {% else %}
+
+                        <span class="admin-estado inactivo">
+                            INACTIVO
+                        </span>
+
+                    {% endif %}
+
+
+                    <h2>
+                        {{ sorteo.titulo }}
+                    </h2>
+
+
+                    <p class="admin-descripcion">
+                        {{ sorteo.descripcion }}
+                    </p>
+
+
+                    <div class="admin-datos">
+
+                        <span>
+                            <strong>
+                                ${{ sorteo.precio_numero | moneda }}
+                            </strong>
+                            por número
+                        </span>
+
+                        <span>
+                            {{ sorteo.cantidad_numeros }}
+                            números
+                        </span>
+
+                        <span>
+                            Máximo:
+                            {{ sorteo.max_numeros_por_persona }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="admin-acciones">
+
+                        <a
+                            href="{{ url_for(
+                                'editar_sorteo',
+                                sorteo_id=sorteo.id
+                            ) }}"
+                            class="admin-boton"
+                        >
+                            Editar
+                        </a>
+
+                        <a
+                            href="{{ url_for(
+                                'administrar_fotos',
+                                sorteo_id=sorteo.id
+                            ) }}"
+                            class="admin-boton"
+                        >
+                            Multimedia
+                        </a>
+
+                        <a
+                            href="{{ url_for(
+                                'admin_participantes',
+                                sorteo_id=sorteo.id
+                            ) }}"
+                            class="admin-boton"
+                        >
+                            Participantes
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        {% else %}
+
+            <div class="sin-sorteos">
+
+                <p>
+                    Todavía no hay sorteos creados.
+                </p>
+
+            </div>
+
+        {% endfor %}
+
+    </main>
+
+</body>
+
+</html>

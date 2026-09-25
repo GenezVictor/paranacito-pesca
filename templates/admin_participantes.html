@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Participantes | {{ sorteo.titulo }}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <main class="admin-formulario admin-participantes">
+
+        <a
+            href="{{ url_for('admin_sorteos') }}"
+            class="admin-volver"
+        >
+            ← Volver a mis sorteos
+        </a>
+
+        <span class="admin-subtitulo">
+            PARANACITO PESCA
+        </span>
+
+        <h1>Participantes</h1>
+
+        <p class="admin-formulario-ayuda">
+            {{ sorteo.titulo }}
+        </p>
+
+
+        <div class="dashboard-sorteo">
+
+            <div class="dashboard-dato">
+                <strong>
+                    {{ estadisticas.disponibles }}
+                </strong>
+                <span>Disponibles</span>
+            </div>
+
+            <div class="dashboard-dato">
+                <strong>
+                    {{ estadisticas.reservados }}
+                </strong>
+                <span>Reservados</span>
+            </div>
+
+            <div class="dashboard-dato">
+                <strong>
+                    {{ estadisticas.vendidos }}
+                </strong>
+                <span>Vendidos</span>
+            </div>
+
+            <div class="dashboard-dato recaudado">
+                <strong>
+                    ${{ estadisticas.recaudado | moneda }}
+                </strong>
+                <span>Pagos aprobados</span>
+            </div>
+
+        </div>
+
+
+        <div class="dashboard-secundario">
+
+            <span>
+                {{ estadisticas.confirmadas }}
+                ventas confirmadas
+            </span>
+
+            {% if estadisticas.revision > 0 %}
+
+                <span class="dashboard-alerta">
+                    ⚠
+                    {{ estadisticas.revision }}
+                    requieren revisión
+                </span>
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="filtros-participantes">
+
+            <button
+                type="button"
+                class="filtro-participante activo"
+                data-filtro="todos"
+            >
+                Todos
+            </button>
+
+            <button
+                type="button"
+                class="filtro-participante"
+                data-filtro="confirmada"
+            >
+                Confirmados
+            </button>
+
+            <button
+                type="button"
+                class="filtro-participante"
+                data-filtro="reservado"
+            >
+                Reservados
+            </button>
+
+            <button
+                type="button"
+                class="filtro-participante"
+                data-filtro="vencido"
+            >
+                Vencidos
+            </button>
+
+            <button
+                type="button"
+                class="filtro-participante"
+                data-filtro="requiere_revision"
+            >
+                Revisión
+            </button>
+
+        </div>
+
+        <section class="lista-participantes">
+
+            {% for dato in datos %}
+
+                {% set p = dato.participacion %}
+                {% set pago = dato.pago %}
+
+                <article
+                    class="participante-card"
+                    data-estado="{{ p.estado }}"
+                >
+
+                    <div class="participante-cabecera">
+
+                        <div>
+
+                            <span class="participante-id">
+                                #{{ p.id }}
+                            </span>
+
+                            <h2>
+                                {{ p.nombre }}
+                            </h2>
+
+                        </div>
+
+
+                        <span
+                            class="
+                                estado-participacion
+                                estado-{{ p.estado }}
+                            "
+                        >
+                            {{ p.estado|upper }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="participante-contacto">
+
+                        <span>
+                            {{ p.email }}
+                        </span>
+
+                        <span>
+                            {{ p.telefono }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="participante-numeros">
+
+                        <strong>
+                            Números
+                        </strong>
+
+                        <div class="numeros-admin">
+
+                            {% for numero in dato.numeros %}
+
+                                <span>
+                                    {{ numero.numero }}
+                                </span>
+
+                            {% else %}
+
+                                <small>
+                                    Sin números asignados
+                                </small>
+
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="participante-pago">
+
+                        {% if pago %}
+
+                            <div>
+                                <small>Pago</small>
+
+                                <strong
+                                    class="
+                                        pago-estado
+                                        pago-{{ pago.estado }}
+                                    "
+                                >
+                                    {{ pago.estado|upper }}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <small>Monto</small>
+
+                                <strong>
+                                    ${{ pago.monto | moneda }}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <small>Método</small>
+
+                                <strong>
+                                    {{ pago.metodo }}
+                                </strong>
+                            </div>
+
+                        {% else %}
+
+                            <span>
+                                Sin información de pago
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    {% if p.estado == "requiere_revision" %}
+
+                        <div class="revision-acciones">
+
+                            <div class="revision-aviso">
+                                Pago aprobado, pero los números
+                                originales ya no están reservados.
+                            </div>
+
+                            <form
+                                method="POST"
+                                action="{{ url_for(
+                                    'asignar_numeros_revision',
+                                    participacion_id=p.id
+                                ) }}"
+                                onsubmit="return confirm(
+                                    '¿Asignar nuevos números y confirmar esta participación?'
+                                );"
+                            >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <button
+                                    type="submit"
+                                    class="boton-resolver-revision"
+                                >
+                                    Asignar nuevos números
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <div class="participante-fecha">
+
+                        {% if p.fecha_creacion %}
+
+                            Creado:
+                            {{ p.fecha_creacion.strftime(
+                                "%d/%m/%Y %H:%M"
+                            ) }}
+
+                        {% else %}
+
+                            Fecha de creación no disponible
+
+                        {% endif %}
+
+                    </div>
+
+                </article>
+
+            {% else %}
+
+                <div class="sin-sorteos">
+
+                    Todavía no hay participantes
+                    en este sorteo.
+
+                </div>
+
+            {% endfor %}
+
+        </section>
+
+    </main>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const botones = document.querySelectorAll(
+        ".filtro-participante"
+    );
+
+    const tarjetas = document.querySelectorAll(
+        ".participante-card"
+    );
+
+    botones.forEach((boton) => {
+
+        boton.addEventListener("click", () => {
+
+            const filtro = boton.dataset.filtro;
+
+            botones.forEach((b) => {
+                b.classList.remove("activo");
+            });
+
+            boton.classList.add("activo");
+
+            tarjetas.forEach((tarjeta) => {
+
+                const estado = tarjeta.dataset.estado;
+
+                if (
+                    filtro === "todos" ||
+                    estado === filtro
+                ) {
+                    tarjeta.style.display = "";
+                } else {
+                    tarjeta.style.display = "none";
+                }
+
+            });
+
+        });
+
+    });
+
+});
+
+</script>
+
+</body>
+
+</html>

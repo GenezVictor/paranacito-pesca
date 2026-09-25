@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Participación registrada</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .reserva {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .temporizador {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .numeros {
+            font-size: 1.3rem;
+        }
+
+        .pago {
+            margin-top: 25px;
+        }
+
+        .boton-pago {
+            display: inline-block;
+            padding: 12px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            background: #3483fa;
+            color: white;
+            font-weight: bold;
+        }
+
+        .boton-pago.deshabilitado {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .vencida {
+            display: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>¡Participación registrada!</h1>
+
+    <h2>{{ sorteo.titulo }}</h2>
+
+    <p>
+        Participante:
+        <strong>{{ participacion.nombre }}</strong>
+    </p>
+
+    <p>
+        Email:
+        {{ participacion.email }}
+    </p>
+
+    <p>
+        Teléfono:
+        {{ participacion.telefono }}
+    </p>
+
+    <div class="reserva">
+
+        <h3>Tus números</h3>
+
+        <ul class="numeros">
+
+            {% for numero in numeros %}
+
+                <li>
+                    Número {{ numero }}
+                </li>
+
+            {% endfor %}
+
+        </ul>
+
+        <p>
+            Cantidad de números:
+            {{ participacion.cantidad }}
+        </p>
+
+        <p>
+            Precio por número:
+            ${{ sorteo.precio_numero | moneda }}
+        </p>
+
+        <p>
+            Total:
+            ${{ (sorteo.precio_numero * participacion.cantidad) | moneda }}
+        </p>
+
+        <p>
+            Estado:
+            <strong>{{ participacion.estado }}</strong>
+        </p>
+
+    </div>
+
+    <div class="pago">
+
+        <h2>Realizá tu pago</h2>
+
+        <p>
+            Tu reserva queda pendiente hasta que se confirme el pago.
+        </p>
+
+        <p>
+            Tenés tiempo para realizar el pago:
+        </p>
+
+        <div
+            id="temporizador"
+            class="temporizador"
+        >
+            Calculando...
+        </div>
+
+        <p
+            id="mensaje-vencida"
+            class="vencida"
+        >
+            Tu reserva ha vencido. Los números fueron liberados.
+        </p>
+
+        <a
+            id="boton-pago"
+            class="boton-pago"
+            href="{{ checkout_url }}"
+        >
+            Pagar con Mercado Pago
+        </a>
+
+    </div>
+
+    <br><br>
+
+    <a href="/">
+        Volver al inicio
+    </a>
+
+    <script>
+        const fechaExpiracion = new Date(
+            "{{ participacion.fecha_expiracion.isoformat() }}"
+        );
+
+        const temporizador = document.getElementById(
+            "temporizador"
+        );
+
+        const botonPago = document.getElementById(
+            "boton-pago"
+        );
+
+        const mensajeVencida = document.getElementById(
+            "mensaje-vencida"
+        );
+
+        function actualizarTemporizador() {
+
+            const ahora = new Date();
+
+            const diferencia =
+                fechaExpiracion.getTime() -
+                ahora.getTime();
+
+            if (diferencia <= 0) {
+
+                temporizador.textContent = "00:00";
+
+                botonPago.classList.add(
+                    "deshabilitado"
+                );
+
+                mensajeVencida.style.display = "block";
+
+                return;
+            }
+
+            const totalSegundos =
+                Math.floor(diferencia / 1000);
+
+            const minutos =
+                Math.floor(totalSegundos / 60);
+
+            const segundos =
+                totalSegundos % 60;
+
+            temporizador.textContent =
+                String(minutos).padStart(2, "0")
+                + ":"
+                + String(segundos).padStart(2, "0");
+        }
+
+        actualizarTemporizador();
+
+        setInterval(
+            actualizarTemporizador,
+            1000
+        );
+    </script>
+
+</body>
+
+</html>
