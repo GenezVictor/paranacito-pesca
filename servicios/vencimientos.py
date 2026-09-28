@@ -1,4 +1,4 @@
-from datetime import datetime
+from servicios.fechas import ahora_utc
 
 from extensions import db
 from models.participacion import Participacion
@@ -8,7 +8,7 @@ from models.pago import Pago
 
 def liberar_participaciones_vencidas():
 
-    ahora = datetime.now()
+    ahora = ahora_utc()
 
     participaciones = Participacion.query.filter(
         Participacion.estado == "reservado",

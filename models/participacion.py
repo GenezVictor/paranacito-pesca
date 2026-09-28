@@ -1,5 +1,5 @@
 from extensions import db
-from datetime import datetime
+from servicios.fechas import ahora_utc
 
 
 class Participacion(db.Model):
@@ -48,7 +48,7 @@ class Participacion(db.Model):
     fecha_creacion = db.Column(
         db.DateTime,
         nullable=False,
-        default=datetime.now
+        default=ahora_utc
     )
 
     fecha_expiracion = db.Column(

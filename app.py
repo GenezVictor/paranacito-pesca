@@ -27,7 +27,8 @@ from servicios.videos import preparar_video
 
 import os
 import random
-from datetime import datetime, timedelta
+from datetime import timedelta
+from servicios.fechas import ahora_utc
 
 load_dotenv()
 
@@ -979,7 +980,7 @@ def participar(sorteo_id):
             pack_nombre=pack.nombre,
             pack_precio=pack.precio,
             estado="reservado",
-            fecha_expiracion=datetime.now() + timedelta(minutes=15),
+            fecha_expiracion=ahora_utc() + timedelta(minutes=15),
             sorteo_id=sorteo.id
         )
 
@@ -1047,7 +1048,7 @@ def participar(sorteo_id):
                 numero.participacion_id = None
 
             participacion.estado = "vencido"
-            participacion.fecha_expiracion = datetime.now()
+            participacion.fecha_expiracion = ahora_utc()
 
             pago.estado = "cancelado"
 

@@ -130,7 +130,7 @@
 
     <script>
         const fechaExpiracion = new Date(
-            "{{ participacion.fecha_expiracion.isoformat() }}"
+            "{{ participacion.fecha_expiracion.isoformat() }}Z"
         );
 
         const temporizador = document.getElementById(
