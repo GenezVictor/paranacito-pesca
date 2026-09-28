@@ -84,7 +84,7 @@ def procesar_pago_aprobado(id_pago, pago_mp):
 
     if (
         participacion.estado == "reservado"
-        and numeros
+        and len(numeros) == participacion.cantidad
     ):
         participacion.estado = "confirmada"
 
