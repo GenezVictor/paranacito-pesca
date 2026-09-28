@@ -14,8 +14,12 @@ if __name__ == "__main__":
 
         print("Iniciando tareas automáticas...")
 
-        liberar_participaciones_vencidas()
-
+        # Primero consultamos Mercado Pago para evitar
+        # vencer una reserva cuyo pago ya fue aprobado.
         verificar_pagos_pendientes()
+
+        # Después liberamos las reservas que realmente
+        # continúan pendientes y ya expiraron.
+        liberar_participaciones_vencidas()
 
         print("Tareas automáticas finalizadas.")
