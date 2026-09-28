@@ -118,24 +118,51 @@
                     </p>
 
 
+                    {% set packs_activos = sorteo.packs
+                        | selectattr("activo")
+                        | list
+                    %}
+
                     <div class="admin-datos">
 
                         <span>
                             <strong>
-                                ${{ sorteo.precio_numero | moneda }}
+                                {{ sorteo.cantidad_numeros }}
                             </strong>
-                            por número
+                            números en el sorteo
                         </span>
 
                         <span>
-                            {{ sorteo.cantidad_numeros }}
-                            números
+                            <strong>
+                                {{ packs_activos | length }}
+                            </strong>
+                            {% if packs_activos | length == 1 %}
+                                pack activo
+                            {% else %}
+                                packs activos
+                            {% endif %}
                         </span>
 
-                        <span>
-                            Máximo:
-                            {{ sorteo.max_numeros_por_persona }}
-                        </span>
+                        {% if packs_activos %}
+
+                            <span>
+                                Desde
+                                <strong>
+                                    ${{ (
+                                        packs_activos
+                                        | map(attribute="precio")
+                                        | min
+                                    ) | moneda }}
+                                </strong>
+                            </span>
+
+                        {% else %}
+
+                            <span>
+                                Sin packs disponibles
+                            </span>
+
+                        {% endif %}
 
                     </div>
 
@@ -160,6 +187,16 @@
                             class="admin-boton"
                         >
                             Multimedia
+                        </a>
+
+                        <a
+                            href="{{ url_for(
+                                'administrar_packs',
+                                sorteo_id=sorteo.id
+                            ) }}"
+                            class="admin-boton"
+                        >
+                            Packs
                         </a>
 
                         <a

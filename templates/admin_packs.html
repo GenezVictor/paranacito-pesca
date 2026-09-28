@@ -33,6 +33,11 @@
                 <h1>
                     Packs de {{ sorteo.titulo }}
                 </h1>
+
+                <p class="admin-descripcion">
+                    Configurá las opciones de compra que
+                    verán los participantes.
+                </p>
             </div>
 
             <div class="admin-acciones-principales">
@@ -41,7 +46,7 @@
                     href="{{ url_for('admin_sorteos') }}"
                     class="admin-boton"
                 >
-                    Volver a sorteos
+                    ← Volver a sorteos
                 </a>
 
             </div>
@@ -49,18 +54,28 @@
         </div>
 
 
-        <article class="admin-sorteo">
+        <section class="packs-admin-grid">
 
-            <div class="admin-info">
+            <article class="pack-formulario-card">
 
-                <h2>
-                    Crear nuevo pack
-                </h2>
+                <div class="pack-admin-titulo">
 
-                <p class="admin-descripcion">
-                    Definí cuántas chances incluye el pack
-                    y cuánto pagará el participante.
-                </p>
+                    <span class="pack-admin-icono">
+                        +
+                    </span>
+
+                    <div>
+                        <h2>
+                            Crear nuevo pack
+                        </h2>
+
+                        <p>
+                            Elegí la cantidad de chances
+                            y el precio total.
+                        </p>
+                    </div>
+
+                </div>
 
 
                 <form method="POST">
@@ -111,7 +126,7 @@
                     <div class="campo">
 
                         <label for="precio">
-                            Precio total del pack
+                            Precio total
                         </label>
 
                         <input
@@ -129,150 +144,186 @@
 
                     <button
                         type="submit"
-                        class="btn-participar"
+                        class="pack-crear-boton"
                     >
-                        Crear pack
+                        + Crear pack
                     </button>
 
                 </form>
 
-            </div>
-
-        </article>
+            </article>
 
 
-        <h2>
-            Packs configurados
-        </h2>
+            <section class="packs-admin-listado">
 
+                <div class="packs-admin-encabezado">
 
-        {% for pack in sorteo.packs %}
-
-            <article class="admin-sorteo">
-
-                <div class="admin-info">
-
-                    {% if pack.activo %}
-
-                        <span class="admin-estado activo">
-                            ACTIVO
+                    <div>
+                        <span class="admin-subtitulo">
+                            CONFIGURACIÓN
                         </span>
 
-                    {% else %}
-
-                        <span class="admin-estado inactivo">
-                            INACTIVO
-                        </span>
-
-                    {% endif %}
-
-
-                    <h2>
-                        {{ pack.nombre }}
-                    </h2>
-
-
-                    <div class="admin-datos">
-
-                        <span>
-                            <strong>
-                                {{ pack.cantidad }}
-                            </strong>
-                            chances
-                        </span>
-
-                        <span>
-                            <strong>
-                                ${{ pack.precio | moneda }}
-                            </strong>
-                            total
-                        </span>
-
-                        <span>
-                            Orden:
-                            {{ pack.orden }}
-                        </span>
-
+                        <h2>
+                            Packs configurados
+                        </h2>
                     </div>
 
-                    <div class="admin-acciones">
-
-                        <a
-                            href="{{ url_for(
-                                'editar_pack',
-                                pack_id=pack.id
-                            ) }}"
-                            class="admin-boton"
-                        >
-                            Editar
-                        </a>
-
-                        <form
-                            method="POST"
-                            action="{{ url_for(
-                                'cambiar_estado_pack',
-                                pack_id=pack.id
-                            ) }}"
-                        >
-                            <input
-                                type="hidden"
-                                name="csrf_token"
-                                value="{{ csrf_token() }}"
-                            >
-
-                            <button
-                                type="submit"
-                                class="admin-boton"
-                            >
-                                {% if pack.activo %}
-                                    Desactivar
-                                {% else %}
-                                    Activar
-                                {% endif %}
-                            </button>
-
-                        </form>
-
-                        <form
-                            method="POST"
-                            action="{{ url_for(
-                                'eliminar_pack',
-                                pack_id=pack.id
-                            ) }}"
-                            onsubmit="return confirm('¿Seguro que querés eliminar este pack? Esta acción no se puede deshacer.');"
-                        >
-                            <input
-                                type="hidden"
-                                name="csrf_token"
-                                value="{{ csrf_token() }}"
-                            >
-
-                            <button
-                                type="submit"
-                                class="admin-boton"
-                            >
-                                Eliminar
-                            </button>
-
-                        </form>
-
-                    </div>
+                    <span class="packs-admin-contador">
+                        {{ sorteo.packs | length }}
+                    </span>
 
                 </div>
 
-            </article>
 
-        {% else %}
+                {% for pack in sorteo.packs %}
 
-            <div class="sin-sorteos">
+                    <article class="pack-admin-card">
 
-                <p>
-                    Este sorteo todavía no tiene packs.
-                </p>
+                        <div class="pack-admin-superior">
 
-            </div>
+                            <div>
 
-        {% endfor %}
+                                {% if pack.activo %}
+
+                                    <span class="admin-estado activo">
+                                        ACTIVO
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="admin-estado inactivo">
+                                        INACTIVO
+                                    </span>
+
+                                {% endif %}
+
+                                <h3>
+                                    {{ pack.nombre }}
+                                </h3>
+
+                            </div>
+
+                            <span class="pack-admin-orden">
+                                #{{ pack.orden }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="pack-admin-datos">
+
+                            <div>
+                                <span>
+                                    CHANCES
+                                </span>
+
+                                <strong>
+                                    {{ pack.cantidad }}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>
+                                    PRECIO
+                                </span>
+
+                                <strong>
+                                    ${{ pack.precio | moneda }}
+                                </strong>
+                            </div>
+
+                        </div>
+
+
+                        <div class="pack-admin-acciones">
+
+                            <a
+                                href="{{ url_for(
+                                    'editar_pack',
+                                    pack_id=pack.id
+                                ) }}"
+                                class="admin-boton"
+                            >
+                                Editar
+                            </a>
+
+
+                            <form
+                                method="POST"
+                                action="{{ url_for(
+                                    'cambiar_estado_pack',
+                                    pack_id=pack.id
+                                ) }}"
+                            >
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="admin-boton"
+                                >
+                                    {% if pack.activo %}
+                                        Desactivar
+                                    {% else %}
+                                        Activar
+                                    {% endif %}
+                                </button>
+
+                            </form>
+
+
+                            <form
+                                method="POST"
+                                action="{{ url_for(
+                                    'eliminar_pack',
+                                    pack_id=pack.id
+                                ) }}"
+                                onsubmit="return confirm('¿Seguro que querés eliminar este pack? Esta acción no se puede deshacer.');"
+                            >
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="pack-eliminar-boton"
+                                >
+                                    Eliminar
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </article>
+
+                {% else %}
+
+                    <div class="pack-admin-vacio">
+
+                        <strong>
+                            Todavía no hay packs
+                        </strong>
+
+                        <p>
+                            Creá el primero usando
+                            el formulario.
+                        </p>
+
+                    </div>
+
+                {% endfor %}
+
+            </section>
+
+        </section>
 
     </main>
 

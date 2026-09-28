@@ -646,26 +646,46 @@ footer p {
 /* DATOS */
 
 .admin-datos {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
 
-    gap: 15px;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
 
-    margin: 20px 0;
+    gap: 12px;
+
+    margin: 22px 0;
 
     color: #d5d8d6;
 }
 
 .admin-datos span {
-    padding: 8px 12px;
+    min-height: 72px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 14px;
+
+    text-align: center;
 
     background: #111714;
 
-    border-radius: 8px;
+    border: 1px solid #343c37;
+    border-radius: 10px;
+
+    line-height: 1.4;
 }
 
 .admin-datos strong {
+    display: block;
+
+    margin-bottom: 3px;
+
     color: #ffad27;
+
+    font-size: 18px;
 }
 
 
@@ -2453,4 +2473,360 @@ footer p {
     .temporizador-compra {
         font-size: 38px;
     }
+}
+
+@media (max-width: 700px) {
+
+    .admin-datos {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+/* =================================
+   ADMINISTRACIÓN DE PACKS
+================================= */
+
+.packs-admin-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 360px) 1fr;
+    gap: 25px;
+    align-items: start;
+    margin-top: 25px;
+}
+
+
+/* FORMULARIO */
+
+.pack-formulario-card {
+    padding: 25px;
+
+    background: #0d1210;
+
+    border: 1px solid #343c37;
+    border-radius: 14px;
+}
+
+.pack-admin-titulo {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    margin-bottom: 25px;
+}
+
+.pack-admin-titulo h2 {
+    margin: 0 0 5px;
+
+    color: #f2f2f2;
+}
+
+.pack-admin-titulo p {
+    margin: 0;
+
+    color: #9ca5a0;
+
+    font-size: 14px;
+}
+
+.pack-admin-icono {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #ff9d23;
+    color: #111;
+
+    font-size: 26px;
+    font-weight: bold;
+}
+
+.pack-formulario-card .campo {
+    margin-bottom: 18px;
+}
+
+.pack-formulario-card label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #d5d8d6;
+
+    font-weight: bold;
+}
+
+.pack-formulario-card input {
+    width: 100%;
+
+    padding: 12px 14px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #414a45;
+    border-radius: 8px;
+
+    background: #111714;
+    color: #fff;
+
+    outline: none;
+}
+
+.pack-formulario-card input:focus {
+    border-color: #ff9d23;
+}
+
+.pack-crear-boton {
+    width: 100%;
+
+    padding: 13px 18px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #ff9d23;
+    color: #111;
+
+    font-weight: bold;
+    font-size: 15px;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.pack-crear-boton:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+}
+
+
+/* LISTADO */
+
+.packs-admin-listado {
+    min-width: 0;
+}
+
+.packs-admin-encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 16px;
+}
+
+.packs-admin-encabezado h2 {
+    margin: 4px 0 0;
+
+    color: #f2f2f2;
+}
+
+.packs-admin-contador {
+    min-width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 8px;
+
+    border-radius: 20px;
+
+    background: #ff9d23;
+    color: #111;
+
+    font-weight: bold;
+}
+
+
+/* TARJETA */
+
+.pack-admin-card {
+    margin-bottom: 15px;
+    padding: 20px;
+
+    background: #0d1210;
+
+    border: 1px solid #343c37;
+    border-radius: 12px;
+}
+
+.pack-admin-superior {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    gap: 15px;
+}
+
+.pack-admin-superior h3 {
+    margin: 10px 0 0;
+
+    color: #fff;
+
+    font-size: 20px;
+}
+
+.pack-admin-orden {
+    padding: 6px 10px;
+
+    border-radius: 7px;
+
+    background: #111714;
+    color: #9ca5a0;
+
+    font-size: 13px;
+}
+
+
+/* DATOS DEL PACK */
+
+.pack-admin-datos {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 12px;
+
+    margin: 18px 0;
+}
+
+.pack-admin-datos div {
+    padding: 14px;
+
+    background: #111714;
+
+    border: 1px solid #2e3632;
+    border-radius: 9px;
+}
+
+.pack-admin-datos span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #8f9994;
+
+    font-size: 11px;
+    font-weight: bold;
+
+    letter-spacing: 0.8px;
+}
+
+.pack-admin-datos strong {
+    color: #ffad27;
+
+    font-size: 20px;
+}
+
+
+/* ACCIONES */
+
+.pack-admin-acciones {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 9px;
+}
+
+.pack-admin-acciones form {
+    margin: 0;
+}
+
+.pack-admin-acciones button {
+    height: 100%;
+    cursor: pointer;
+}
+
+.pack-eliminar-boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 10px 16px;
+
+    border: 1px solid #8f3535;
+    border-radius: 8px;
+
+    background: #211313;
+    color: #ff7777;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.pack-eliminar-boton:hover {
+    background: #8f3535;
+    color: #fff;
+}
+
+
+/* SIN PACKS */
+
+.pack-admin-vacio {
+    padding: 35px 20px;
+
+    text-align: center;
+
+    background: #0d1210;
+
+    border: 1px dashed #414a45;
+    border-radius: 12px;
+
+    color: #9ca5a0;
+}
+
+.pack-admin-vacio strong {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #fff;
+}
+
+
+/* CELULAR */
+
+@media (max-width: 800px) {
+
+    .packs-admin-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pack-admin-datos {
+        grid-template-columns: 1fr 1fr;
+    }
+
+}
+
+@media (max-width: 500px) {
+
+    .pack-admin-datos {
+        grid-template-columns: 1fr;
+    }
+
+    .pack-admin-acciones {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .pack-admin-acciones .admin-boton,
+    .pack-admin-acciones .pack-eliminar-boton,
+    .pack-admin-acciones form {
+        width: 100%;
+    }
+
 }
