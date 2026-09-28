@@ -1902,3 +1902,555 @@ footer p {
         border-radius: 10px;
     }
 }
+
+
+/* =================================
+   FLUJO DE COMPRA
+================================= */
+
+.compra-body {
+    min-height: 100vh;
+
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(255, 145, 20, 0.13),
+            transparent 32%
+        ),
+        #111714;
+}
+
+.compra-contenedor,
+.resultado-contenedor {
+    width: 100%;
+    max-width: 820px;
+
+    margin: 0 auto;
+    padding: 45px 20px 70px;
+}
+
+.compra-volver,
+.resultado-volver {
+    display: inline-block;
+
+    margin-bottom: 20px;
+
+    color: #bfc5c1;
+
+    text-decoration: none;
+}
+
+.compra-volver:hover,
+.resultado-volver:hover {
+    color: #ffb52e;
+}
+
+.compra-card,
+.resultado-card {
+    padding: 35px;
+
+    background: #1b211e;
+
+    border: 1px solid #343c37;
+    border-radius: 18px;
+
+    box-shadow:
+        0 15px 45px
+        rgba(0, 0, 0, 0.35);
+}
+
+.compra-etiqueta {
+    display: inline-block;
+
+    color: #ffad27;
+
+    font-size: 12px;
+    font-weight: bold;
+
+    letter-spacing: 3px;
+}
+
+.compra-encabezado h1,
+.resultado-card h1 {
+    margin: 10px 0;
+
+    color: white;
+
+    font-size: 34px;
+}
+
+.compra-encabezado p,
+.resultado-subtitulo {
+    color: #adb4b0;
+
+    line-height: 1.6;
+}
+
+.compra-seccion {
+    margin-top: 35px;
+}
+
+.compra-seccion h2,
+.resultado-numeros h2,
+.resultado-pago h2 {
+    margin-bottom: 8px;
+
+    color: #ffb52e;
+}
+
+.compra-ayuda {
+    margin-top: 0;
+
+    color: #969e99;
+}
+
+
+/* CAMPOS */
+
+.campo-formulario {
+    margin-top: 20px;
+}
+
+.campo-formulario label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-weight: bold;
+}
+
+.campo-formulario input {
+    width: 100%;
+
+    padding: 14px 15px;
+
+    border: 1px solid #3c4540;
+    border-radius: 9px;
+
+    outline: none;
+
+    background: #101512;
+    color: white;
+
+    font-size: 16px;
+
+    transition: 0.2s;
+}
+
+.campo-formulario input:focus {
+    border-color: #ffad27;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(255, 173, 39, 0.10);
+}
+
+
+/* PACKS */
+
+.packs-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 15px;
+
+    margin-top: 22px;
+}
+
+.pack-card {
+    cursor: pointer;
+}
+
+.pack-card input {
+    position: absolute;
+
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+.pack-contenido {
+    min-height: 180px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding: 22px;
+
+    text-align: center;
+
+    background: #111714;
+
+    border: 2px solid #343c37;
+    border-radius: 14px;
+
+    transition: 0.2s;
+}
+
+.pack-card:hover .pack-contenido {
+    border-color: #a56e20;
+
+    transform: translateY(-2px);
+}
+
+.pack-card input:checked + .pack-contenido {
+    border-color: #ffad27;
+
+    background:
+        linear-gradient(
+            145deg,
+            #20231b,
+            #302113
+        );
+
+    box-shadow:
+        0 0 0 3px
+        rgba(255, 173, 39, 0.10);
+}
+
+.pack-nombre {
+    font-size: 17px;
+    font-weight: bold;
+
+    color: white;
+}
+
+.pack-cantidad {
+    margin-top: 7px;
+
+    color: #bfc5c1;
+}
+
+.pack-precio {
+    margin-top: 10px;
+
+    color: #ffad27;
+
+    font-size: 27px;
+    font-weight: bold;
+}
+
+.pack-seleccionar {
+    margin-top: 12px;
+
+    color: #8e9691;
+
+    font-size: 12px;
+    font-weight: bold;
+
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.pack-card input:checked
++ .pack-contenido
+.pack-seleccionar {
+    color: #ffb52e;
+}
+
+.compra-boton {
+    width: 100%;
+
+    margin-top: 28px;
+    padding: 16px 25px;
+
+    border: 0;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffc928,
+            #ff8a1f
+        );
+
+    color: #111;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    transition: 0.2s;
+}
+
+.compra-boton:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 7px 20px
+        rgba(255, 157, 35, 0.25);
+}
+
+.sin-packs {
+    margin-top: 20px;
+    padding: 18px;
+
+    text-align: center;
+
+    border: 1px solid #343c37;
+    border-radius: 10px;
+
+    color: #aaa;
+}
+
+.compra-seguridad {
+    max-width: 620px;
+
+    margin: 22px auto 0;
+
+    text-align: center;
+
+    color: #828a85;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* RESULTADO */
+
+.resultado-card {
+    text-align: center;
+}
+
+.resultado-check {
+    width: 65px;
+    height: 65px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 20px;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffc928,
+            #ff8a1f
+        );
+
+    color: #111;
+
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.resultado-datos {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 12px;
+
+    margin: 30px 0;
+}
+
+.resultado-datos p {
+    margin: 0;
+    padding: 16px 10px;
+
+    background: #111714;
+
+    border: 1px solid #343c37;
+    border-radius: 10px;
+
+    color: #939b96;
+
+    font-size: 13px;
+}
+
+.resultado-datos strong {
+    display: block;
+
+    margin-top: 7px;
+
+    color: white;
+
+    font-size: 16px;
+}
+
+.resultado-datos .resultado-total {
+    color: #ffad27;
+
+    font-size: 20px;
+}
+
+.resultado-numeros {
+    padding: 25px 0;
+
+    border-top: 1px solid #343c37;
+    border-bottom: 1px solid #343c37;
+}
+
+.resultado-numeros p {
+    color: #999f9b;
+}
+
+.numeros-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    gap: 12px;
+
+    margin-top: 22px;
+}
+
+.numero-bola {
+    min-width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 10px;
+
+    border: 2px solid #ffad27;
+    border-radius: 50%;
+
+    background: #111714;
+    color: #ffb52e;
+
+    font-size: 20px;
+    font-weight: bold;
+
+    box-shadow:
+        0 5px 15px
+        rgba(0, 0, 0, 0.25);
+}
+
+.resultado-pago {
+    padding-top: 25px;
+}
+
+.resultado-pago > p {
+    color: #aeb5b0;
+}
+
+.temporizador-compra {
+    margin: 18px 0 8px;
+
+    color: #ffad27;
+
+    font-size: 45px;
+    font-weight: bold;
+
+    letter-spacing: 2px;
+}
+
+.temporizador-ayuda {
+    max-width: 520px;
+
+    margin: 0 auto 25px;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.boton-mercadopago {
+    display: block;
+
+    width: 100%;
+
+    padding: 16px 25px;
+
+    border-radius: 10px;
+
+    background: #3483fa;
+    color: white;
+
+    text-decoration: none;
+
+    font-weight: bold;
+
+    transition: 0.2s;
+}
+
+.boton-mercadopago:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 7px 20px
+        rgba(52, 131, 250, 0.25);
+}
+
+.boton-mercadopago.deshabilitado {
+    pointer-events: none;
+
+    opacity: 0.45;
+}
+
+.mensaje-vencida {
+    display: none;
+
+    padding: 12px;
+
+    border-radius: 8px;
+
+    background: rgba(220, 70, 70, 0.10);
+    color: #ff7b7b;
+
+    font-weight: bold;
+}
+
+.resultado-volver {
+    display: block;
+
+    margin-top: 22px;
+
+    text-align: center;
+}
+
+
+/* COMPRA - CELULAR */
+
+@media (max-width: 700px) {
+
+    .compra-contenedor,
+    .resultado-contenedor {
+        padding: 25px 14px 50px;
+    }
+
+    .compra-card,
+    .resultado-card {
+        padding: 24px 18px;
+    }
+
+    .compra-encabezado h1,
+    .resultado-card h1 {
+        font-size: 27px;
+    }
+
+    .packs-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pack-contenido {
+        min-height: 150px;
+    }
+
+    .resultado-datos {
+        grid-template-columns: 1fr;
+    }
+
+    .numero-bola {
+        min-width: 52px;
+        height: 52px;
+
+        font-size: 18px;
+    }
+
+    .temporizador-compra {
+        font-size: 38px;
+    }
+}

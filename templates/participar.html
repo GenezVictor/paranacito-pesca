@@ -6,102 +6,185 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Participar - {{ sorteo.titulo }}</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
 </head>
 
-<body>
+<body class="compra-body">
 
-    <h1>{{ sorteo.titulo }}</h1>
+    <main class="compra-contenedor">
 
-    <p>
-        {{ sorteo.descripcion }}
-    </p>
+        <a class="compra-volver" href="/">
+            ← Volver a los sorteos
+        </a>
 
-    <p>
-        Precio por número:
-        ${{ sorteo.precio_numero | moneda }}
-    </p>
+        <section class="compra-card">
 
-    <p>
-        Máximo de números:
-        {{ sorteo.max_numeros_por_persona }}
-    </p>
+            <div class="compra-encabezado">
 
-    <h2>Datos del participante</h2>
+                <span class="compra-etiqueta">
+                    PARANACITO PESCA
+                </span>
 
-    <form method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <h1>{{ sorteo.titulo }}</h1>
 
-        <label for="nombre">
-            Nombre
-        </label>
+                {% if sorteo.descripcion %}
+                    <p>
+                        {{ sorteo.descripcion }}
+                    </p>
+                {% endif %}
 
-        <br>
+            </div>
 
-        <input
-            type="text"
-            id="nombre"
-            name="nombre"
-            required
-        >
+            <form method="POST" class="compra-form">
 
-        <br><br>
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
 
+                <div class="compra-seccion">
 
-        <label for="email">
-            Email
-        </label>
+                    <h2>Tus datos</h2>
 
-        <br>
+                    <div class="campo-formulario">
 
-        <input
-            type="email"
-            id="email"
-            name="email"
-            required
-        >
+                        <label for="nombre">
+                            Nombre
+                        </label>
 
-        <br><br>
+                        <input
+                            type="text"
+                            id="nombre"
+                            name="nombre"
+                            placeholder="Tu nombre"
+                            required
+                        >
 
+                    </div>
 
-        <label for="telefono">
-            Teléfono
-        </label>
+                    <div class="campo-formulario">
 
-        <br>
+                        <label for="email">
+                            Email
+                        </label>
 
-        <input
-            type="tel"
-            id="telefono"
-            name="telefono"
-            required
-        >
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="tu@email.com"
+                            required
+                        >
 
-        <br><br>
+                    </div>
 
+                    <div class="campo-formulario">
 
-        <label for="cantidad">
-            Cantidad de números
-        </label>
+                        <label for="telefono">
+                            Teléfono
+                        </label>
 
-        <br>
+                        <input
+                            type="tel"
+                            id="telefono"
+                            name="telefono"
+                            placeholder="Ej: 11 1234 5678"
+                            required
+                        >
 
-        <input
-            type="number"
-            id="cantidad"
-            name="cantidad"
-            min="1"
-            max="{{ sorteo.max_numeros_por_persona }}"
-            value="1"
-            required
-        >
+                    </div>
 
-        <br><br>
+                </div>
 
-        <button type="submit">
-            Obtener mis números
-        </button>
+                <div class="compra-seccion">
 
-    </form>
+                    <h2>Elegí tu pack</h2>
+
+                    <p class="compra-ayuda">
+                        Cuantas más chances tengas, más números
+                        participarán del sorteo.
+                    </p>
+
+                    {% set packs_activos = sorteo.packs
+                        | selectattr("activo")
+                        | list
+                    %}
+
+                    {% if packs_activos %}
+
+                        <div class="packs-grid">
+
+                            {% for pack in packs_activos %}
+
+                                <label class="pack-card">
+
+                                    <input
+                                        type="radio"
+                                        name="pack_id"
+                                        value="{{ pack.id }}"
+                                        required
+                                    >
+
+                                    <span class="pack-contenido">
+
+                                        <span class="pack-nombre">
+                                            {{ pack.nombre }}
+                                        </span>
+
+                                        <span class="pack-cantidad">
+                                            {{ pack.cantidad }}
+                                            chances
+                                        </span>
+
+                                        <span class="pack-precio">
+                                            ${{ pack.precio | moneda }}
+                                        </span>
+
+                                        <span class="pack-seleccionar">
+                                            Seleccionar
+                                        </span>
+
+                                    </span>
+
+                                </label>
+
+                            {% endfor %}
+
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="compra-boton"
+                        >
+                            Obtener mis números
+                        </button>
+
+                    {% else %}
+
+                        <div class="sin-packs">
+                            No hay packs disponibles actualmente.
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </form>
+
+        </section>
+
+        <p class="compra-seguridad">
+            Tus números se asignan aleatoriamente y quedan
+            reservados durante 15 minutos mientras realizás
+            el pago.
+        </p>
+
+    </main>
 
 </body>
 

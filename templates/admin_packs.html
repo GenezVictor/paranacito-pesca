@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Packs | {{ sorteo.titulo }} | Paranacito Pesca
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+    <main class="admin-contenedor">
+
+        <div class="admin-encabezado">
+
+            <div>
+                <span class="admin-subtitulo">
+                    PARANACITO PESCA
+                </span>
+
+                <h1>
+                    Packs de {{ sorteo.titulo }}
+                </h1>
+            </div>
+
+            <div class="admin-acciones-principales">
+
+                <a
+                    href="{{ url_for('admin_sorteos') }}"
+                    class="admin-boton"
+                >
+                    Volver a sorteos
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <article class="admin-sorteo">
+
+            <div class="admin-info">
+
+                <h2>
+                    Crear nuevo pack
+                </h2>
+
+                <p class="admin-descripcion">
+                    Definí cuántas chances incluye el pack
+                    y cuánto pagará el participante.
+                </p>
+
+
+                <form method="POST">
+
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+
+                    <div class="campo">
+
+                        <label for="nombre">
+                            Nombre del pack
+                        </label>
+
+                        <input
+                            type="text"
+                            id="nombre"
+                            name="nombre"
+                            placeholder="Ej: Pack 10 chances"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="campo">
+
+                        <label for="cantidad">
+                            Cantidad de chances
+                        </label>
+
+                        <input
+                            type="number"
+                            id="cantidad"
+                            name="cantidad"
+                            min="1"
+                            max="{{ sorteo.cantidad_numeros }}"
+                            placeholder="10"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="campo">
+
+                        <label for="precio">
+                            Precio total del pack
+                        </label>
+
+                        <input
+                            type="number"
+                            id="precio"
+                            name="precio"
+                            min="1"
+                            step="0.01"
+                            placeholder="10000"
+                            required
+                        >
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="btn-participar"
+                    >
+                        Crear pack
+                    </button>
+
+                </form>
+
+            </div>
+
+        </article>
+
+
+        <h2>
+            Packs configurados
+        </h2>
+
+
+        {% for pack in sorteo.packs %}
+
+            <article class="admin-sorteo">
+
+                <div class="admin-info">
+
+                    {% if pack.activo %}
+
+                        <span class="admin-estado activo">
+                            ACTIVO
+                        </span>
+
+                    {% else %}
+
+                        <span class="admin-estado inactivo">
+                            INACTIVO
+                        </span>
+
+                    {% endif %}
+
+
+                    <h2>
+                        {{ pack.nombre }}
+                    </h2>
+
+
+                    <div class="admin-datos">
+
+                        <span>
+                            <strong>
+                                {{ pack.cantidad }}
+                            </strong>
+                            chances
+                        </span>
+
+                        <span>
+                            <strong>
+                                ${{ pack.precio | moneda }}
+                            </strong>
+                            total
+                        </span>
+
+                        <span>
+                            Orden:
+                            {{ pack.orden }}
+                        </span>
+
+                    </div>
+
+                    <div class="admin-acciones">
+
+                        <a
+                            href="{{ url_for(
+                                'editar_pack',
+                                pack_id=pack.id
+                            ) }}"
+                            class="admin-boton"
+                        >
+                            Editar
+                        </a>
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'cambiar_estado_pack',
+                                pack_id=pack.id
+                            ) }}"
+                        >
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="admin-boton"
+                            >
+                                {% if pack.activo %}
+                                    Desactivar
+                                {% else %}
+                                    Activar
+                                {% endif %}
+                            </button>
+
+                        </form>
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'eliminar_pack',
+                                pack_id=pack.id
+                            ) }}"
+                            onsubmit="return confirm('¿Seguro que querés eliminar este pack? Esta acción no se puede deshacer.');"
+                        >
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="admin-boton"
+                            >
+                                Eliminar
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        {% else %}
+
+            <div class="sin-sorteos">
+
+                <p>
+                    Este sorteo todavía no tiene packs.
+                </p>
+
+            </div>
+
+        {% endfor %}
+
+    </main>
+
+</body>
+
+</html>

@@ -18,6 +18,7 @@ from models.numero import Numero
 from models.participacion import Participacion
 from models.pago import Pago
 from models.multimedia import Multimedia
+from models.pack import Pack
 from servicios.vencimientos import liberar_participaciones_vencidas
 from servicios.mercado_pago import crear_preferencia, consultar_pago
 from servicios.procesar_pagos import procesar_pago_aprobado
@@ -661,6 +662,188 @@ def admin_participantes(sorteo_id):
     )
 
 
+@app.route(
+    "/admin/sorteos/<int:sorteo_id>/packs",
+    methods=["GET", "POST"]
+)
+@admin_requerido
+def administrar_packs(sorteo_id):
+
+    sorteo = Sorteo.query.get_or_404(sorteo_id)
+
+    if request.method == "POST":
+
+        nombre = request.form.get(
+            "nombre",
+            ""
+        ).strip()
+
+        try:
+            cantidad = int(
+                request.form.get("cantidad", "0")
+            )
+
+            precio = float(
+                request.form.get("precio", "0")
+            )
+
+        except ValueError:
+            return "Cantidad o precio inválido.", 400
+
+        if not nombre:
+            return "El nombre del pack es obligatorio.", 400
+
+        if cantidad < 1:
+            return "La cantidad debe ser mayor a 0.", 400
+
+        if cantidad > sorteo.cantidad_numeros:
+            return (
+                "El pack no puede superar la cantidad "
+                "total de números del sorteo.",
+                400
+            )
+
+        if precio <= 0:
+            return "El precio debe ser mayor a 0.", 400
+
+        ultimo_orden = (
+            db.session.query(db.func.max(Pack.orden))
+            .filter_by(sorteo_id=sorteo.id)
+            .scalar()
+        )
+
+        nuevo_pack = Pack(
+            nombre=nombre,
+            cantidad=cantidad,
+            precio=precio,
+            activo=True,
+            orden=(ultimo_orden or 0) + 1,
+            sorteo_id=sorteo.id
+        )
+
+        db.session.add(nuevo_pack)
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                "administrar_packs",
+                sorteo_id=sorteo.id
+            )
+        )
+
+    return render_template(
+        "admin_packs.html",
+        sorteo=sorteo
+    )
+
+
+@app.route(
+    "/admin/packs/<int:pack_id>/editar",
+    methods=["GET", "POST"]
+)
+@admin_requerido
+def editar_pack(pack_id):
+
+    pack = Pack.query.get_or_404(pack_id)
+    sorteo = pack.sorteo
+
+    if request.method == "POST":
+
+        nombre = request.form.get(
+            "nombre",
+            ""
+        ).strip()
+
+        try:
+            cantidad = int(
+                request.form.get("cantidad", "0")
+            )
+
+            precio = float(
+                request.form.get("precio", "0")
+            )
+
+        except ValueError:
+            return "Cantidad o precio inválido.", 400
+
+        if not nombre:
+            return "El nombre del pack es obligatorio.", 400
+
+        if cantidad < 1:
+            return "La cantidad debe ser mayor a 0.", 400
+
+        if cantidad > sorteo.cantidad_numeros:
+            return (
+                "El pack no puede superar la cantidad "
+                "total de números del sorteo.",
+                400
+            )
+
+        if precio <= 0:
+            return "El precio debe ser mayor a 0.", 400
+
+        pack.nombre = nombre
+        pack.cantidad = cantidad
+        pack.precio = precio
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                "administrar_packs",
+                sorteo_id=sorteo.id
+            )
+        )
+
+    return render_template(
+        "editar_pack.html",
+        pack=pack,
+        sorteo=sorteo
+    )
+
+
+@app.route(
+    "/admin/packs/<int:pack_id>/estado",
+    methods=["POST"]
+)
+@admin_requerido
+def cambiar_estado_pack(pack_id):
+
+    pack = Pack.query.get_or_404(pack_id)
+
+    pack.activo = not pack.activo
+
+    db.session.commit()
+
+    return redirect(
+        url_for(
+            "administrar_packs",
+            sorteo_id=pack.sorteo_id
+        )
+    )
+
+
+@app.route(
+    "/admin/packs/<int:pack_id>/eliminar",
+    methods=["POST"]
+)
+@admin_requerido
+def eliminar_pack(pack_id):
+
+    pack = Pack.query.get_or_404(pack_id)
+    sorteo_id = pack.sorteo_id
+
+    db.session.delete(pack)
+    db.session.commit()
+
+    return redirect(
+        url_for(
+            "administrar_packs",
+            sorteo_id=sorteo_id
+        )
+    )
+
+
 @app.route("/admin/sorteos/nuevo", methods=["GET", "POST"])
 @admin_requerido
 def nuevo_sorteo():
@@ -770,52 +953,50 @@ def participar(sorteo_id):
             return "El teléfono es obligatorio.", 400
 
         try:
-            cantidad = int(request.form.get("cantidad", ""))
+            pack_id = int(
+                request.form.get("pack_id", "")
+            )
         except (TypeError, ValueError):
-            return "La cantidad ingresada no es válida.", 400
+            return "El pack seleccionado no es válido.", 400
+
+        pack = Pack.query.filter_by(
+            id=pack_id,
+            sorteo_id=sorteo.id,
+            activo=True
+        ).first()
+
+        if pack is None:
+            return (
+                "El pack seleccionado no existe "
+                "o ya no está disponible.",
+                400
+            )
+
+        cantidad = pack.cantidad
 
         if cantidad < 1:
-            return "La cantidad debe ser mayor a 0.", 400
+            return "El pack tiene una cantidad inválida.", 400
 
-        if cantidad > sorteo.max_numeros_por_persona:
-            return "Superaste el máximo de números permitidos.", 400
+        numeros_disponibles = Numero.query.filter_by(
+            sorteo_id=sorteo.id,
+            estado="disponible"
+        ).all()
 
-        inicio = random.randint(
-            1,
-            sorteo.cantidad_numeros
-        )
-
-        numeros_asignados = []
-
-        for desplazamiento in range(
-            sorteo.cantidad_numeros
-        ):
-
-            candidato = (
-                (inicio - 1 + desplazamiento)
-                % sorteo.cantidad_numeros
-            ) + 1
-
-            numero = Numero.query.filter_by(
-                sorteo_id=sorteo.id,
-                numero=candidato,
-                estado="disponible"
-            ).first()
-
-            if numero:
-                numeros_asignados.append(numero)
-
-            if len(numeros_asignados) == cantidad:
-                break
-
-        if len(numeros_asignados) < cantidad:
+        if len(numeros_disponibles) < cantidad:
             return "No hay suficientes números disponibles."
+
+        numeros_asignados = random.sample(
+            numeros_disponibles,
+            cantidad
+        )
 
         participacion = Participacion(
             nombre=nombre,
             email=email,
             telefono=telefono,
             cantidad=cantidad,
+            pack_nombre=pack.nombre,
+            pack_precio=pack.precio,
             estado="reservado",
             fecha_expiracion=datetime.now() + timedelta(minutes=15),
             sorteo_id=sorteo.id
@@ -832,7 +1013,7 @@ def participar(sorteo_id):
 
         pago = Pago(
             participacion_id=participacion.id,
-            monto=sorteo.precio_numero * participacion.cantidad,
+            monto=pack.precio,
             estado="pendiente",
             metodo="mercado_pago"
         )
@@ -842,9 +1023,9 @@ def participar(sorteo_id):
         db.session.commit()
 
         respuesta_mp = crear_preferencia(
-            sorteo.titulo,
-            participacion.cantidad,
-            sorteo.precio_numero,
+            f"{sorteo.titulo} - {pack.nombre}",
+            1,
+            pack.precio,
             participacion.id
         )
 
@@ -921,45 +1102,21 @@ def asignar_numeros_revision(participacion_id):
             400
         )
 
-    inicio = random.randint(
-        1,
-        sorteo.cantidad_numeros
-    )
+    numeros_disponibles = Numero.query.filter_by(
+        sorteo_id=sorteo.id,
+        estado="disponible"
+    ).all()
 
-    numeros_asignados = []
-
-    for desplazamiento in range(
-        sorteo.cantidad_numeros
-    ):
-
-        candidato = (
-            (inicio - 1 + desplazamiento)
-            % sorteo.cantidad_numeros
-        ) + 1
-
-        numero = Numero.query.filter_by(
-            sorteo_id=sorteo.id,
-            numero=candidato,
-            estado="disponible"
-        ).first()
-
-        if numero:
-            numeros_asignados.append(numero)
-
-        if (
-            len(numeros_asignados)
-            == participacion.cantidad
-        ):
-            break
-
-    if (
-        len(numeros_asignados)
-        < participacion.cantidad
-    ):
+    if len(numeros_disponibles) < participacion.cantidad:
         return (
-            "No se pudieron encontrar suficientes números.",
+            "No hay suficientes números disponibles.",
             400
         )
+
+    numeros_asignados = random.sample(
+        numeros_disponibles,
+        participacion.cantidad
+    )
 
     for numero in numeros_asignados:
         numero.estado = "vendido"

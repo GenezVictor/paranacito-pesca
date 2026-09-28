@@ -5,159 +5,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Participación registrada</title>
+    <title>Participación registrada - Paranacito Pesca</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 700px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-
-        .reserva {
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .temporizador {
-            font-size: 2rem;
-            font-weight: bold;
-            margin: 15px 0;
-        }
-
-        .numeros {
-            font-size: 1.3rem;
-        }
-
-        .pago {
-            margin-top: 25px;
-        }
-
-        .boton-pago {
-            display: inline-block;
-            padding: 12px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-            background: #3483fa;
-            color: white;
-            font-weight: bold;
-        }
-
-        .boton-pago.deshabilitado {
-            pointer-events: none;
-            opacity: 0.5;
-        }
-
-        .vencida {
-            display: none;
-            font-weight: bold;
-        }
-    </style>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
 </head>
 
-<body>
+<body class="compra-body">
 
-    <h1>¡Participación registrada!</h1>
+    <main class="resultado-contenedor">
 
-    <h2>{{ sorteo.titulo }}</h2>
+        <section class="resultado-card">
 
-    <p>
-        Participante:
-        <strong>{{ participacion.nombre }}</strong>
-    </p>
+            <div class="resultado-check">
+                ✓
+            </div>
 
-    <p>
-        Email:
-        {{ participacion.email }}
-    </p>
+            <span class="compra-etiqueta">
+                PARANACITO PESCA
+            </span>
 
-    <p>
-        Teléfono:
-        {{ participacion.telefono }}
-    </p>
+            <h1>¡Tus números están reservados!</h1>
 
-    <div class="reserva">
+            <p class="resultado-subtitulo">
+                {{ sorteo.titulo }}
+            </p>
 
-        <h3>Tus números</h3>
+            <div class="resultado-datos">
 
-        <ul class="numeros">
+                <p>
+                    Participante
+                    <strong>
+                        {{ participacion.nombre }}
+                    </strong>
+                </p>
 
-            {% for numero in numeros %}
+                <p>
+                    Pack elegido
+                    <strong>
+                        {{ participacion.pack_nombre }}
+                    </strong>
+                </p>
 
-                <li>
-                    Número {{ numero }}
-                </li>
+                <p>
+                    Total
+                    <strong class="resultado-total">
+                        ${{ participacion.pack_precio | moneda }}
+                    </strong>
+                </p>
 
-            {% endfor %}
+            </div>
 
-        </ul>
+            <div class="resultado-numeros">
 
-        <p>
-            Cantidad de números:
-            {{ participacion.cantidad }}
-        </p>
+                <h2>Tus números</h2>
 
-        <p>
-            Precio por número:
-            ${{ sorteo.precio_numero | moneda }}
-        </p>
+                <p>
+                    Estos son tus
+                    {{ participacion.cantidad }}
+                    números asignados al azar.
+                </p>
 
-        <p>
-            Total:
-            ${{ (sorteo.precio_numero * participacion.cantidad) | moneda }}
-        </p>
+                <div class="numeros-grid">
 
-        <p>
-            Estado:
-            <strong>{{ participacion.estado }}</strong>
-        </p>
+                    {% for numero in numeros %}
 
-    </div>
+                        <span class="numero-bola">
+                            {{ numero }}
+                        </span>
 
-    <div class="pago">
+                    {% endfor %}
 
-        <h2>Realizá tu pago</h2>
+                </div>
 
-        <p>
-            Tu reserva queda pendiente hasta que se confirme el pago.
-        </p>
+            </div>
 
-        <p>
-            Tenés tiempo para realizar el pago:
-        </p>
+            <div class="resultado-pago">
 
-        <div
-            id="temporizador"
-            class="temporizador"
-        >
-            Calculando...
-        </div>
+                <h2>Completá tu pago</h2>
 
-        <p
-            id="mensaje-vencida"
-            class="vencida"
-        >
-            Tu reserva ha vencido. Los números fueron liberados.
-        </p>
+                <p>
+                    Tus números están reservados durante:
+                </p>
 
-        <a
-            id="boton-pago"
-            class="boton-pago"
-            href="{{ checkout_url }}"
-        >
-            Pagar con Mercado Pago
+                <div
+                    id="temporizador"
+                    class="temporizador-compra"
+                >
+                    Calculando...
+                </div>
+
+                <p class="temporizador-ayuda">
+                    Si el tiempo termina antes de que se confirme
+                    el pago, los números volverán a estar disponibles.
+                </p>
+
+                <p
+                    id="mensaje-vencida"
+                    class="mensaje-vencida"
+                >
+                    Tu reserva venció. Los números fueron liberados.
+                </p>
+
+                <a
+                    id="boton-pago"
+                    class="boton-mercadopago"
+                    href="{{ checkout_url }}"
+                >
+                    Pagar ${{ participacion.pack_precio | moneda }}
+                    con Mercado Pago
+                </a>
+
+            </div>
+
+        </section>
+
+        <a class="resultado-volver" href="/">
+            Volver al inicio
         </a>
 
-    </div>
-
-    <br><br>
-
-    <a href="/">
-        Volver al inicio
-    </a>
+    </main>
 
     <script>
         const fechaExpiracion = new Date(

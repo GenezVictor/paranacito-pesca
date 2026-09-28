@@ -29,6 +29,16 @@ class Participacion(db.Model):
         nullable=False
     )
 
+    pack_nombre = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
+    pack_precio = db.Column(
+        db.Float,
+        nullable=True
+    )
+
     estado = db.Column(
         db.String(20),
         nullable=False,

@@ -18,5 +18,13 @@ class Sorteo(db.Model):
         order_by="Multimedia.orden"
     )
 
+    packs = db.relationship(
+        "Pack",
+        backref="sorteo",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="Pack.orden"
+    )
+
     def __repr__(self):
         return f"<Sorteo {self.titulo}>"
