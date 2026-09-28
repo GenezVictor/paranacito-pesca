@@ -84,7 +84,10 @@ def preparar_confirmacion_pago(participacion):
         "emails/pago_confirmado.html",
         nombre=participacion.nombre,
         sorteo=sorteo.titulo if sorteo else "Sorteo",
-        numeros=lista_numeros or "Sin números asignados"
+        numeros=lista_numeros or "Sin números asignados",
+        pack_nombre=participacion.pack_nombre,
+        cantidad=participacion.cantidad,
+        pack_precio=participacion.pack_precio
     )
 
     asunto = (

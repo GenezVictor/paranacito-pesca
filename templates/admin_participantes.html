@@ -192,10 +192,65 @@
                     </div>
 
 
+                    <div class="participante-pack">
+
+                        {% if p.pack_nombre %}
+
+                            <div>
+                                <small>
+                                    Pack comprado
+                                </small>
+
+                                <strong>
+                                    {{ p.pack_nombre }}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <small>
+                                    Chances
+                                </small>
+
+                                <strong>
+                                    {{ p.cantidad }}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <small>
+                                    Precio del pack
+                                </small>
+
+                                <strong>
+                                    ${{ p.pack_precio | moneda }}
+                                </strong>
+                            </div>
+
+                        {% else %}
+
+                            <div>
+                                <small>
+                                    Participación
+                                </small>
+
+                                <strong>
+                                    {{ p.cantidad }} chances
+                                </strong>
+
+                                <span class="participante-pack-antiguo">
+                                    Registro anterior al sistema de packs
+                                </span>
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
                     <div class="participante-numeros">
 
                         <strong>
-                            Números
+                            Números asignados
                         </strong>
 
                         <div class="numeros-admin">

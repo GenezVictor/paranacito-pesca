@@ -1003,19 +1003,62 @@ def participar(sorteo_id):
 
         db.session.commit()
 
-        respuesta_mp = crear_preferencia(
-            f"{sorteo.titulo} - {pack.nombre}",
-            1,
-            pack.precio,
-            participacion.id
-        )
+        try:
+            respuesta_mp = crear_preferencia(
+                f"{sorteo.titulo} - {pack.nombre}",
+                1,
+                pack.precio,
+                participacion.id
+            )
 
-        preferencia_id = respuesta_mp["response"].get("id")
-        checkout_url = respuesta_mp["response"].get("init_point")
+            datos_mp = (
+                respuesta_mp.get("response")
+                if isinstance(respuesta_mp, dict)
+                else None
+            )
 
-        pago.preferencia_id = preferencia_id
+            if not isinstance(datos_mp, dict):
+                raise ValueError(
+                    "Mercado Pago no devolvió una respuesta válida."
+                )
 
-        db.session.commit()
+            preferencia_id = datos_mp.get("id")
+            checkout_url = datos_mp.get("init_point")
+
+            if not preferencia_id or not checkout_url:
+                raise ValueError(
+                    "Mercado Pago no devolvió los datos "
+                    "necesarios para iniciar el pago."
+                )
+
+            pago.preferencia_id = preferencia_id
+
+            db.session.commit()
+
+        except Exception as error:
+
+            print(
+                "MERCADO PAGO: no se pudo crear "
+                f"la preferencia: {error}"
+            )
+
+            for numero in numeros_asignados:
+                numero.estado = "disponible"
+                numero.participacion_id = None
+
+            participacion.estado = "vencido"
+            participacion.fecha_expiracion = datetime.now()
+
+            pago.estado = "cancelado"
+
+            db.session.commit()
+
+            return (
+                "No pudimos iniciar el pago con Mercado Pago. "
+                "Tus números fueron liberados para que puedas "
+                "intentarlo nuevamente.",
+                503
+            )
 
         numeros = [
             numero.numero
