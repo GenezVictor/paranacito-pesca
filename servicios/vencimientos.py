@@ -34,7 +34,7 @@ def liberar_participaciones_vencidas():
             participacion_id=participacion.id
         ).first()
 
-        if pago:
+        if pago and pago.estado == "pendiente":
             pago.estado = "vencido"
 
     db.session.commit()
