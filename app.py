@@ -211,41 +211,11 @@ def editar_sorteo(sorteo_id):
         titulo = request.form["titulo"].strip()
         descripcion = request.form["descripcion"].strip()
 
-        try:
-            precio_numero = float(
-                request.form["precio_numero"]
-            )
-
-            max_numeros = int(
-                request.form["max_numeros_por_persona"]
-            )
-
-        except ValueError:
-            return "Precio o máximo inválido.", 400
-
         if not titulo:
             return "El título es obligatorio.", 400
 
-        if precio_numero <= 0:
-            return "El precio debe ser mayor a 0.", 400
-
-        if max_numeros < 1:
-            return "El máximo debe ser mayor a 0.", 400
-
-        if max_numeros > sorteo.cantidad_numeros:
-            return (
-                "El máximo por persona no puede superar "
-                "la cantidad total de números.",
-                400
-            )
-
         sorteo.titulo = titulo
         sorteo.descripcion = descripcion
-        sorteo.precio_numero = precio_numero
-
-        sorteo.max_numeros_por_persona = (
-            max_numeros
-        )
 
         sorteo.activo = (
             request.form.get("activo") == "on"
@@ -850,25 +820,36 @@ def nuevo_sorteo():
 
     if request.method == "POST":
 
-        titulo = request.form["titulo"]
-        descripcion = request.form["descripcion"]
-        precio_numero = float(
-            request.form["precio_numero"]
-        )
+        titulo = request.form["titulo"].strip()
+        descripcion = request.form["descripcion"].strip()
 
-        max_numeros_por_persona = int(
-            request.form["max_numeros_por_persona"]
-        )
+        try:
+            cantidad_numeros = int(
+                request.form["cantidad_numeros"]
+            )
+        except (ValueError, TypeError):
+            return "Cantidad de números inválida.", 400
 
-        cantidad_numeros = int(
-            request.form["cantidad_numeros"]
-        )
+        if not titulo:
+            return "El título es obligatorio.", 400
+
+        if cantidad_numeros < 1:
+            return (
+                "La cantidad de números debe ser "
+                "mayor a 0.",
+                400
+            )
 
         nuevo = Sorteo(
             titulo=titulo,
             descripcion=descripcion,
-            precio_numero=precio_numero,
-            max_numeros_por_persona=max_numeros_por_persona,
+
+            # Valores heredados. La compra actual
+            # utiliza los precios y cantidades
+            # configurados en los packs.
+            precio_numero=1,
+            max_numeros_por_persona=1,
+
             cantidad_numeros=cantidad_numeros,
             activo=True
         )

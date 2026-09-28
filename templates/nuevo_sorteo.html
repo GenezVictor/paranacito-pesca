@@ -3,172 +3,257 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Nuevo sorteo | Paranacito Pesca</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<style>
-    #vista-previa {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin: 20px 0;
-    }
+    <title>
+        Nuevo sorteo | Paranacito Pesca
+    </title>
 
-    .imagen-seleccionada {
-        position: relative;
-        width: 140px;
-        height: 110px;
-    }
-
-    .imagen-seleccionada img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 10px;
-    }
-
-    .imagen-seleccionada button {
-        position: absolute;
-        top: -8px;
-        right: -8px;
-
-        width: 28px;
-        height: 28px;
-
-        border: none;
-        border-radius: 50%;
-
-        background: #111;
-        color: white;
-
-        font-size: 20px;
-        cursor: pointer;
-    }
-</style>
-
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
 </head>
 
 <body>
 
-    <h1>Crear nuevo sorteo</h1>
+    <main class="admin-contenedor">
 
-    <form
-        method="POST"
-        enctype="multipart/form-data"
-    >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="admin-encabezado">
 
-        <label for="titulo">
-            Título
-        </label>
+            <div>
 
-        <input
-            type="text"
-            name="titulo"
-            id="titulo"
-            required
+                <span class="admin-subtitulo">
+                    PARANACITO PESCA
+                </span>
+
+                <h1>
+                    Crear nuevo sorteo
+                </h1>
+
+                <p class="admin-descripcion">
+                    Cargá la información principal del sorteo
+                    y las fotos del premio.
+                </p>
+
+            </div>
+
+
+            <div class="admin-acciones-principales">
+
+                <a
+                    href="{{ url_for('admin_sorteos') }}"
+                    class="admin-boton"
+                >
+                    ← Volver a sorteos
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+            class="nuevo-sorteo-form"
         >
 
-        <br><br>
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
 
-        <label for="descripcion">
-            Descripción
-        </label>
 
-        <textarea
-            name="descripcion"
-            id="descripcion"
-        ></textarea>
+            <section class="nuevo-sorteo-card">
 
-        <br><br>
+                <div class="nuevo-sorteo-seccion-titulo">
 
-        <label for="precio_numero">
-            Precio por número
-        </label>
+                    <span class="nuevo-sorteo-numero">
+                        1
+                    </span>
 
-        <input
-            type="number"
-            name="precio_numero"
-            id="precio_numero"
-            min="0"
-            required
-        >
+                    <div>
 
-        <br><br>
+                        <h2>
+                            Información del sorteo
+                        </h2>
 
-        <label for="max_numeros_por_persona">
-            Máximo de números por persona
-        </label>
+                        <p>
+                            Estos datos serán visibles
+                            para los participantes.
+                        </p>
 
-        <input
-            type="number"
-            name="max_numeros_por_persona"
-            id="max_numeros_por_persona"
-            min="1"
-            value="1"
-            required
-        >
+                    </div>
 
-        <br><br>
+                </div>
 
-        <label for="cantidad_numeros">
-            Cantidad de números del sorteo
-        </label>
 
-        <input
-            type="number"
-            name="cantidad_numeros"
-            id="cantidad_numeros"
-            min="1"
-            value="100"
-            required
-        >
+                <div class="campo">
 
-        <br><br>
+                    <label for="titulo">
+                        Título del sorteo
+                    </label>
 
-        <hr>
+                    <input
+                        type="text"
+                        name="titulo"
+                        id="titulo"
+                        placeholder="Ej: Sorteo equipo de pesca"
+                        required
+                    >
 
-        <h2>Fotos del premio</h2>
+                </div>
 
-        <p>
-            Agregá una o varias fotos. Podés hacerlo
-            varias veces sin perder las anteriores.
-        </p>
 
-        <input
-            type="file"
-            id="selector-imagenes"
-            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-            multiple
-        >
+                <div class="campo">
 
-        <!-- Este input es el que realmente se envía a Flask -->
-        <input
-            type="file"
-            name="imagenes"
-            id="imagenes"
-            multiple
-            hidden
-        >
+                    <label for="descripcion">
+                        Descripción
+                    </label>
 
-        <p id="contador-imagenes">
-            Ninguna imagen seleccionada.
-        </p>
+                    <textarea
+                        name="descripcion"
+                        id="descripcion"
+                        rows="5"
+                        placeholder="Contá qué se sortea y los detalles del premio..."
+                    ></textarea>
 
-        <div id="vista-previa"></div>
+                </div>
 
-        <small>
-            Formatos permitidos: JPG, JPEG, PNG y WEBP.
-        </small>
 
-        <br><br>
+                <div class="campo">
 
-        <button type="submit">
-            Crear sorteo
-        </button>
+                    <label for="cantidad_numeros">
+                        Cantidad total de números
+                    </label>
 
-    </form>
+                    <input
+                        type="number"
+                        name="cantidad_numeros"
+                        id="cantidad_numeros"
+                        min="1"
+                        value="100"
+                        required
+                    >
+
+                    <small class="nuevo-sorteo-ayuda">
+                        Define cuántos números estarán disponibles
+                        en total. Los precios y cantidades de compra
+                        se configuran después desde Packs.
+                    </small>
+
+                </div>
+
+            </section>
+
+
+            <section class="nuevo-sorteo-card">
+
+                <div class="nuevo-sorteo-seccion-titulo">
+
+                    <span class="nuevo-sorteo-numero">
+                        2
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Fotos del premio
+                        </h2>
+
+                        <p>
+                            Podés seleccionar varias imágenes
+                            y quitar las que no quieras antes
+                            de crear el sorteo.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="nuevo-sorteo-upload">
+
+                    <label
+                        for="selector-imagenes"
+                        class="nuevo-sorteo-selector"
+                    >
+
+                        <span class="nuevo-sorteo-upload-icono">
+                            +
+                        </span>
+
+                        <strong>
+                            Agregar fotos
+                        </strong>
+
+                        <small>
+                            JPG, JPEG, PNG o WEBP
+                        </small>
+
+                    </label>
+
+
+                    <input
+                        type="file"
+                        id="selector-imagenes"
+                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        multiple
+                        hidden
+                    >
+
+
+                    <!-- Este input es el que realmente se envía a Flask -->
+                    <input
+                        type="file"
+                        name="imagenes"
+                        id="imagenes"
+                        multiple
+                        hidden
+                    >
+
+                </div>
+
+
+                <p
+                    id="contador-imagenes"
+                    class="nuevo-sorteo-contador"
+                >
+                    Ninguna imagen seleccionada.
+                </p>
+
+
+                <div id="vista-previa"></div>
+
+            </section>
+
+
+            <div class="nuevo-sorteo-final">
+
+                <p>
+                    Después de crear el sorteo podrás configurar
+                    sus packs, multimedia y participantes desde
+                    el panel de administración.
+                </p>
+
+                <button
+                    type="submit"
+                    class="nuevo-sorteo-crear"
+                >
+                    Crear sorteo
+                </button>
+
+            </div>
+
+        </form>
+
+    </main>
 
 
 <script>
@@ -189,6 +274,7 @@
     );
 
     let archivosSeleccionados = [];
+
 
     selector.addEventListener("change", function () {
 
@@ -240,9 +326,11 @@
 
         contador.textContent =
             archivosSeleccionados.length +
-            (archivosSeleccionados.length === 1
-                ? " imagen seleccionada."
-                : " imágenes seleccionadas.");
+            (
+                archivosSeleccionados.length === 1
+                    ? " imagen seleccionada."
+                    : " imágenes seleccionadas."
+            );
 
         archivosSeleccionados.forEach(
             (archivo, indice) => {
@@ -253,6 +341,7 @@
                 contenedor.className =
                     "imagen-seleccionada";
 
+
                 const imagen =
                     document.createElement("img");
 
@@ -261,12 +350,14 @@
 
                 imagen.alt = archivo.name;
 
+
                 const boton =
                     document.createElement("button");
 
                 boton.type = "button";
                 boton.textContent = "×";
                 boton.title = "Quitar imagen";
+
 
                 boton.addEventListener(
                     "click",
@@ -280,6 +371,7 @@
                         actualizarArchivos();
                     }
                 );
+
 
                 contenedor.appendChild(imagen);
                 contenedor.appendChild(boton);

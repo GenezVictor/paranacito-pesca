@@ -23,122 +23,188 @@
 
 <body>
 
-    <main class="admin-formulario">
+    <main class="admin-contenedor">
 
-        <a
-            href="{{ url_for('admin_sorteos') }}"
-            class="admin-volver"
-        >
-            ← Volver a mis sorteos
-        </a>
+        <div class="admin-encabezado">
 
-        <span class="admin-subtitulo">
-            PARANACITO PESCA
-        </span>
+            <div>
 
-        <h1>Editar sorteo</h1>
-
-        <p class="admin-formulario-ayuda">
-            Modificá la información pública del sorteo.
-        </p>
-
-
-        <form method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <label for="titulo">
-                Título
-            </label>
-
-            <input
-                type="text"
-                id="titulo"
-                name="titulo"
-                value="{{ sorteo.titulo }}"
-                required
-            >
-
-
-            <label for="descripcion">
-                Descripción
-            </label>
-
-            <textarea
-                id="descripcion"
-                name="descripcion"
-                rows="6"
-            >{{ sorteo.descripcion or '' }}</textarea>
-
-
-            <label for="precio_numero">
-                Precio por número
-            </label>
-
-            <input
-                type="number"
-                id="precio_numero"
-                name="precio_numero"
-                value="{{ sorteo.precio_numero }}"
-                min="1"
-                step="0.01"
-                required
-            >
-
-
-            <label for="max_numeros_por_persona">
-                Máximo de números por persona
-            </label>
-
-            <input
-                type="number"
-                id="max_numeros_por_persona"
-                name="max_numeros_por_persona"
-                value="{{ sorteo.max_numeros_por_persona }}"
-                min="1"
-                max="{{ sorteo.cantidad_numeros }}"
-                required
-            >
-
-
-            <div class="admin-cantidad-bloque">
-
-                <span>
-                    Cantidad total de números
+                <span class="admin-subtitulo">
+                    PARANACITO PESCA
                 </span>
 
-                <strong>
-                    {{ sorteo.cantidad_numeros }}
-                </strong>
+                <h1>
+                    Editar sorteo
+                </h1>
 
-                <small>
-                    Por seguridad no se modifica desde
-                    esta pantalla.
-                </small>
+                <p class="admin-descripcion">
+                    Modificá la información pública
+                    de {{ sorteo.titulo }}.
+                </p>
 
             </div>
 
 
-            <label class="admin-switch">
+            <div class="admin-acciones-principales">
 
-                <input
-                    type="checkbox"
-                    name="activo"
-                    {% if sorteo.activo %}checked{% endif %}
+                <a
+                    href="{{ url_for('admin_sorteos') }}"
+                    class="admin-boton"
                 >
+                    ← Volver a sorteos
+                </a>
 
-                <span>
-                    Sorteo activo y visible al público
-                </span>
+            </div>
 
-            </label>
+        </div>
 
 
-            <button
-                type="submit"
-                class="btn-participar"
+        <form
+            method="POST"
+            class="nuevo-sorteo-form"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
             >
-                Guardar cambios
-            </button>
+
+
+            <section class="nuevo-sorteo-card">
+
+                <div class="nuevo-sorteo-seccion-titulo">
+
+                    <span class="nuevo-sorteo-numero">
+                        1
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Información del sorteo
+                        </h2>
+
+                        <p>
+                            Estos datos son visibles
+                            para los participantes.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="campo">
+
+                    <label for="titulo">
+                        Título del sorteo
+                    </label>
+
+                    <input
+                        type="text"
+                        id="titulo"
+                        name="titulo"
+                        value="{{ sorteo.titulo }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="campo">
+
+                    <label for="descripcion">
+                        Descripción
+                    </label>
+
+                    <textarea
+                        id="descripcion"
+                        name="descripcion"
+                        rows="6"
+                    >{{ sorteo.descripcion or '' }}</textarea>
+
+                </div>
+
+
+                <div class="admin-cantidad-bloque">
+
+                    <span>
+                        Cantidad total de números
+                    </span>
+
+                    <strong>
+                        {{ sorteo.cantidad_numeros }}
+                    </strong>
+
+                    <small>
+                        Esta cantidad queda bloqueada después
+                        de crear el sorteo para evitar problemas
+                        con números ya reservados o vendidos.
+                    </small>
+
+                </div>
+
+            </section>
+
+
+            <section class="nuevo-sorteo-card">
+
+                <div class="nuevo-sorteo-seccion-titulo">
+
+                    <span class="nuevo-sorteo-numero">
+                        2
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Estado del sorteo
+                        </h2>
+
+                        <p>
+                            Controlá si el sorteo puede
+                            mostrarse al público.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <label class="admin-switch">
+
+                    <input
+                        type="checkbox"
+                        name="activo"
+                        {% if sorteo.activo %}checked{% endif %}
+                    >
+
+                    <span>
+                        Sorteo activo y visible al público
+                    </span>
+
+                </label>
+
+            </section>
+
+
+            <div class="nuevo-sorteo-final">
+
+                <p>
+                    Los precios y cantidades de compra
+                    se administran por separado desde
+                    la sección Packs.
+                </p>
+
+                <button
+                    type="submit"
+                    class="nuevo-sorteo-crear"
+                >
+                    Guardar cambios
+                </button>
+
+            </div>
 
         </form>
 
