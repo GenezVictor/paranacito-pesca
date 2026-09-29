@@ -73,7 +73,7 @@
                     {% if sorteo.multimedia %}
 
                         <img
-                            src="{{ url_for(
+                            src="{{ sorteo.multimedia[0].url if sorteo.multimedia[0].url.startswith('http') else url_for(
                                 'static',
                                 filename=sorteo.multimedia[0].url
                             ) }}"
