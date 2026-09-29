@@ -97,7 +97,7 @@
 
                             <img
                                 class="imagen-principal"
-                                src="{{ url_for('static', filename=imagen_principal.url) }}"
+                                src="{{ imagen_principal.url if imagen_principal.url.startswith('http') else url_for('static', filename=imagen_principal.url) }}"
                                 alt="{{ sorteo.titulo }}"
                             >
 
@@ -138,7 +138,7 @@
                                         >
 
                                             <img
-                                                src="{{ url_for('static', filename=multimedia.url) }}"
+                                                src="{{ multimedia.url if multimedia.url.startswith('http') else url_for('static', filename=multimedia.url) }}"
                                                 alt="Foto {{ loop.index }} de {{ sorteo.titulo }}"
                                             >
 

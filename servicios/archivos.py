@@ -1,8 +1,9 @@
-from pathlib import Path
 from uuid import uuid4
 
 from PIL import Image, UnidentifiedImageError
 from werkzeug.utils import secure_filename
+
+from servicios.supabase_storage import obtener_cliente_supabase, SUPABASE_BUCKET
 
 
 EXTENSIONES_IMAGEN = {
@@ -17,10 +18,6 @@ FORMATOS_IMAGEN = {
     "PNG",
     "WEBP"
 }
-
-CARPETA_SORTEOS = Path(
-    "static/uploads/sorteos"
-)
 
 
 def extension_permitida(nombre_archivo):
@@ -101,7 +98,6 @@ def guardar_imagen(archivo, sorteo_id):
         1
     )[1].lower()
 
-    # Evita archivos con extensión engañosa.
     extensiones_por_formato = {
         "JPEG": {"jpg", "jpeg"},
         "PNG": {"png"},
@@ -117,26 +113,33 @@ def guardar_imagen(archivo, sorteo_id):
         )
 
     nombre_nuevo = (
-        f"sorteo_{sorteo_id}_"
+        f"sorteos/sorteo_{sorteo_id}/"
         f"{uuid4().hex}."
         f"{extension}"
     )
 
-    CARPETA_SORTEOS.mkdir(
-        parents=True,
-        exist_ok=True
+    content_types = {
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "webp": "image/webp"
+    }
+
+    archivo.stream.seek(0)
+    contenido = archivo.read()
+
+    supabase = obtener_cliente_supabase()
+
+    supabase.storage.from_(SUPABASE_BUCKET).upload(
+        nombre_nuevo,
+        contenido,
+        {
+            "content-type": content_types[extension]
+        }
     )
 
-    ruta = (
-        CARPETA_SORTEOS
-        / nombre_nuevo
-    )
-
-    archivo.save(
-        ruta
-    )
-
-    return (
-        f"uploads/sorteos/"
-        f"{nombre_nuevo}"
+    return supabase.storage.from_(
+        SUPABASE_BUCKET
+    ).get_public_url(
+        nombre_nuevo
     )

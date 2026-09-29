@@ -25,6 +25,8 @@ def crear_preferencia(
     referencia
 ):
 
+    base_url = os.getenv("BASE_URL")
+
     datos = {
         "items": [
             {
@@ -35,6 +37,12 @@ def crear_preferencia(
         ],
         "external_reference": str(referencia)
     }
+
+    if base_url:
+        datos["notification_url"] = (
+            base_url.rstrip("/")
+            + "/webhook/mercadopago"
+        )
 
     respuesta = sdk.preference().create(datos)
 

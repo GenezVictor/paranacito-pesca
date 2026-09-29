@@ -61,7 +61,7 @@
                 <article class="admin-foto">
 
                     <img
-                        src="{{ url_for(
+                        src="{{ imagen.url if imagen.url.startswith('http') else url_for(
                             'static',
                             filename=imagen.url
                         ) }}"
