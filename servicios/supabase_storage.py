@@ -33,3 +33,34 @@ def subir_archivo_supabase(archivo, carpeta="sorteos"):
     )
 
     return supabase.storage.from_(SUPABASE_BUCKET).get_public_url(nombre_archivo)
+
+
+def eliminar_archivo_supabase(url):
+    if not url or not url.startswith("http"):
+        return False
+
+    marcador = (
+        f"/storage/v1/object/public/"
+        f"{SUPABASE_BUCKET}/"
+    )
+
+    if marcador not in url:
+        return False
+
+    ruta_objeto = url.split(
+        marcador,
+        1
+    )[1]
+
+    if not ruta_objeto:
+        return False
+
+    supabase = obtener_cliente_supabase()
+
+    supabase.storage.from_(
+        SUPABASE_BUCKET
+    ).remove(
+        [ruta_objeto]
+    )
+
+    return True

@@ -23,6 +23,7 @@ from servicios.vencimientos import liberar_participaciones_vencidas
 from servicios.mercado_pago import crear_preferencia, consultar_pago
 from servicios.procesar_pagos import procesar_pago_aprobado
 from servicios.archivos import guardar_imagen
+from servicios.supabase_storage import eliminar_archivo_supabase
 from servicios.videos import preparar_video
 
 import os
@@ -502,7 +503,11 @@ def eliminar_foto(sorteo_id, foto_id):
 
     era_principal = foto.principal
 
-    ruta_archivo = Path("static") / foto.url
+    url_foto = foto.url
+
+    ruta_archivo = None
+    if not url_foto.startswith("http"):
+        ruta_archivo = Path("static") / url_foto
 
     db.session.delete(foto)
     db.session.flush()
@@ -522,13 +527,16 @@ def eliminar_foto(sorteo_id, foto_id):
     db.session.commit()
 
     try:
-        if ruta_archivo.is_file():
+        if url_foto.startswith("http"):
+            eliminar_archivo_supabase(url_foto)
+
+        elif ruta_archivo and ruta_archivo.is_file():
             ruta_archivo.unlink()
 
-    except OSError as error:
+    except Exception as error:
         print(
-            f"No se pudo borrar el archivo "
-            f"{ruta_archivo}: {error}"
+            f"No se pudo borrar la imagen "
+            f"{url_foto}: {error}"
         )
 
     return redirect(
