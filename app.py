@@ -41,6 +41,9 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = (
+    os.getenv("SESSION_COOKIE_SECURE", "0") == "1"
+)
 app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
 database_url = os.getenv(
@@ -1291,4 +1294,4 @@ def webhook_mercadopago():
     return "OK", 200
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=os.getenv("FLASK_DEBUG") == "1")
