@@ -1023,23 +1023,6 @@ def participar(sorteo_id):
                 participacion.id
             )
 
-            if isinstance(respuesta_mp, dict):
-                print(
-                    "MP DEBUG STATUS:",
-                    respuesta_mp.get("status")
-                )
-                respuesta_debug = respuesta_mp.get("response")
-
-                if isinstance(respuesta_debug, dict):
-                    print(
-                        "MP DEBUG ERROR:",
-                        respuesta_debug.get("error")
-                    )
-                    print(
-                        "MP DEBUG MESSAGE:",
-                        respuesta_debug.get("message")
-                    )
-
             datos_mp = (
                 respuesta_mp.get("response")
                 if isinstance(respuesta_mp, dict)
