@@ -1,4 +1,5 @@
 from uuid import uuid4
+from io import BytesIO
 
 from PIL import Image, UnidentifiedImageError
 from werkzeug.utils import secure_filename
@@ -85,48 +86,57 @@ def guardar_imagen(archivo, sorteo_id):
             "Usá JPG, JPEG, PNG o WEBP."
         )
 
-    formato = validar_imagen(
-        archivo
-    )
+    validar_imagen(archivo)
 
-    nombre_seguro = secure_filename(
-        archivo.filename
-    )
+    # Abrimos nuevamente la imagen después de validarla.
+    archivo.stream.seek(0)
 
-    extension = nombre_seguro.rsplit(
-        ".",
-        1
-    )[1].lower()
+    try:
+        imagen = Image.open(archivo.stream)
 
-    extensiones_por_formato = {
-        "JPEG": {"jpg", "jpeg"},
-        "PNG": {"png"},
-        "WEBP": {"webp"}
-    }
+        # Corrige imágenes con modos incompatibles con WEBP.
+        if imagen.mode not in ("RGB", "RGBA"):
+            imagen = imagen.convert("RGB")
 
-    if extension not in extensiones_por_formato[
-        formato
-    ]:
+        # Evita subir imágenes con dimensiones excesivas.
+        imagen.thumbnail(
+            (1920, 1920),
+            Image.Resampling.LANCZOS
+        )
+
+        salida = BytesIO()
+
+        imagen.save(
+            salida,
+            format="WEBP",
+            quality=82,
+            method=6
+        )
+
+        contenido = salida.getvalue()
+
+    except (
+        UnidentifiedImageError,
+        OSError,
+        ValueError
+    ) as error:
         raise ValueError(
-            "La extensión del archivo no coincide "
-            "con el contenido de la imagen."
+            "No se pudo procesar la imagen."
+        ) from error
+
+    # Límite de seguridad antes de enviar a Supabase.
+    limite_bytes = 5 * 1024 * 1024
+
+    if len(contenido) > limite_bytes:
+        raise ValueError(
+            "La imagen sigue siendo demasiado grande "
+            "después de comprimirla."
         )
 
     nombre_nuevo = (
         f"sorteos/sorteo_{sorteo_id}/"
-        f"{uuid4().hex}."
-        f"{extension}"
+        f"{uuid4().hex}.webp"
     )
-
-    content_types = {
-        "jpg": "image/jpeg",
-        "jpeg": "image/jpeg",
-        "png": "image/png",
-        "webp": "image/webp"
-    }
-
-    archivo.stream.seek(0)
-    contenido = archivo.read()
 
     supabase = obtener_cliente_supabase()
 
@@ -134,7 +144,7 @@ def guardar_imagen(archivo, sorteo_id):
         nombre_nuevo,
         contenido,
         {
-            "content-type": content_types[extension]
+            "content-type": "image/webp"
         }
     )
 
