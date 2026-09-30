@@ -203,6 +203,86 @@ def admin_sorteos():
 
 
 @app.route(
+    "/admin/sorteos/<int:sorteo_id>/eliminar",
+    methods=["POST"]
+)
+@admin_requerido
+def eliminar_sorteo(sorteo_id):
+
+    sorteo = Sorteo.query.get_or_404(sorteo_id)
+
+    participaciones = Participacion.query.filter_by(
+        sorteo_id=sorteo.id
+    ).all()
+
+    ids_participaciones = [
+        participacion.id
+        for participacion in participaciones
+    ]
+
+    try:
+
+        # Primero eliminamos los archivos físicos de Supabase.
+        for multimedia in list(sorteo.multimedia):
+
+            if multimedia.url:
+                try:
+                    eliminar_archivo_supabase(
+                        multimedia.url
+                    )
+                except Exception as error:
+                    print(
+                        "SUPABASE: no se pudo eliminar "
+                        f"multimedia {multimedia.id}: {error}"
+                    )
+
+        # Los pagos dependen de las participaciones.
+        if ids_participaciones:
+            Pago.query.filter(
+                Pago.participacion_id.in_(
+                    ids_participaciones
+                )
+            ).delete(
+                synchronize_session=False
+            )
+
+        # Los números dependen del sorteo y también
+        # pueden apuntar a una participación.
+        Numero.query.filter_by(
+            sorteo_id=sorteo.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        # Ahora ya podemos eliminar las participaciones.
+        Participacion.query.filter_by(
+            sorteo_id=sorteo.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        # Multimedia y packs se eliminan mediante
+        # cascade="all, delete-orphan" de Sorteo.
+        db.session.delete(sorteo)
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+        raise
+
+    flash(
+        "Sorteo y todo su historial eliminados correctamente.",
+        "success"
+    )
+
+    return redirect(
+        url_for("admin_sorteos")
+    )
+
+
+@app.route(
     "/admin/sorteos/<int:sorteo_id>/editar",
     methods=["GET", "POST"]
 )

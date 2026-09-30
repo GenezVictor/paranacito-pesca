@@ -209,6 +209,28 @@
                             Participantes
                         </a>
 
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'eliminar_sorteo',
+                                sorteo_id=sorteo.id
+                            ) }}"
+                            onsubmit="return confirm('¿Seguro que querés eliminar este sorteo? También se eliminarán sus participantes, pagos y números. Esta acción no se puede deshacer.');"
+                        >
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="pack-eliminar-boton"
+                            >
+                                Eliminar
+                            </button>
+                        </form>
+
                     </div>
 
                 </div>
