@@ -220,19 +220,6 @@
                     {{ sorteo.descripcion }}
                 </p>
 
-                <p class="precio">
-                    ${{ sorteo.precio_numero | moneda }}
-                    <span>por número</span>
-                </p>
-
-                <p class="limite">
-                    Podés obtener hasta
-                    <strong>
-                        {{ sorteo.max_numeros_por_persona }}
-                    </strong>
-                    números.
-                </p>
-
                 <a
                     href="{{ url_for('participar', sorteo_id=sorteo.id) }}"
                     class="btn-participar"
