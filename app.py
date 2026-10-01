@@ -949,19 +949,38 @@ def nuevo_sorteo():
         db.session.add(nuevo)
         db.session.commit()
 
-        for i in range(
+        # Crear los números mediante inserciones masivas por lotes.
+        # Esto evita cargar miles de objetos SQLAlchemy en memoria
+        # cuando el sorteo tiene una cantidad grande de números.
+        tamano_lote = 5000
+
+        for inicio in range(
             1,
-            nuevo.cantidad_numeros + 1
+            nuevo.cantidad_numeros + 1,
+            tamano_lote
         ):
 
-            numero = Numero(
-                numero=i,
-                sorteo_id=nuevo.id
+            fin = min(
+                inicio + tamano_lote,
+                nuevo.cantidad_numeros + 1
             )
 
-            db.session.add(numero)
+            datos_numeros = [
+                {
+                    "numero": numero,
+                    "estado": "disponible",
+                    "sorteo_id": nuevo.id,
+                    "participacion_id": None
+                }
+                for numero in range(inicio, fin)
+            ]
 
-        db.session.commit()
+            db.session.execute(
+                db.insert(Numero),
+                datos_numeros
+            )
+
+            db.session.commit()
 
         # Guardar imágenes del sorteo
         imagenes = request.files.getlist("imagenes")
@@ -1050,18 +1069,74 @@ def participar(sorteo_id):
         if cantidad < 1:
             return "El pack tiene una cantidad inválida.", 400
 
-        numeros_disponibles = Numero.query.filter_by(
-            sorteo_id=sorteo.id,
-            estado="disponible"
-        ).all()
+        # Selección aleatoria eficiente para sorteos grandes.
+        # En lugar de cargar u ordenar todos los números,
+        # generamos candidatos aleatorios y consultamos solo esos.
+        numeros_asignados = []
+        ids_asignados = set()
+        numeros_probados = set()
 
-        if len(numeros_disponibles) < cantidad:
-            return "No hay suficientes números disponibles."
+        total_numeros = sorteo.cantidad_numeros
+        intentos = 0
+        max_intentos = 20
 
-        numeros_asignados = random.sample(
-            numeros_disponibles,
-            cantidad
-        )
+        while (
+            len(numeros_asignados) < cantidad
+            and intentos < max_intentos
+        ):
+            faltan = cantidad - len(numeros_asignados)
+
+            candidatos_necesarios = min(
+                max(faltan * 3, 20),
+                total_numeros - len(numeros_probados)
+            )
+
+            if candidatos_necesarios <= 0:
+                break
+
+            candidatos = set()
+
+            while (
+                len(candidatos) < candidatos_necesarios
+                and len(numeros_probados) + len(candidatos)
+                < total_numeros
+            ):
+                candidato = random.randint(
+                    1,
+                    total_numeros
+                )
+
+                if candidato not in numeros_probados:
+                    candidatos.add(candidato)
+
+            candidatos = list(candidatos)
+            numeros_probados.update(candidatos)
+
+            encontrados = (
+                Numero.query
+                .filter(
+                    Numero.sorteo_id == sorteo.id,
+                    Numero.estado == "disponible",
+                    Numero.numero.in_(candidatos)
+                )
+                .with_for_update(skip_locked=True)
+                .limit(faltan)
+                .all()
+            )
+
+            for numero in encontrados:
+                if numero.id not in ids_asignados:
+                    numeros_asignados.append(numero)
+                    ids_asignados.add(numero.id)
+
+            intentos += 1
+
+        if len(numeros_asignados) < cantidad:
+            db.session.rollback()
+            return (
+                "No hay suficientes números disponibles.",
+                409
+            )
 
         participacion = Participacion(
             nombre=nombre,
