@@ -42,6 +42,16 @@
             {{ sorteo.titulo }}
         </p>
 
+        <a
+            href="{{ url_for(
+                'exportar_participantes_excel',
+                sorteo_id=sorteo.id
+            ) }}"
+            class="btn-participar"
+        >
+            Exportar Excel
+        </a>
+
 
         <div class="dashboard-sorteo">
 

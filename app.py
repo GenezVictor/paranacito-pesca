@@ -6,7 +6,8 @@ from flask import (
     redirect,
     url_for,
     session,
-    flash
+    flash,
+    send_file
 )
 from functools import wraps
 from werkzeug.security import check_password_hash
@@ -28,7 +29,9 @@ from servicios.videos import preparar_video
 
 import os
 import random
+from io import BytesIO
 from datetime import timedelta
+from openpyxl import Workbook
 from servicios.fechas import ahora_utc
 
 load_dotenv()
@@ -721,6 +724,118 @@ def admin_participantes(sorteo_id):
         sorteo=sorteo,
         datos=datos,
         estadisticas=estadisticas
+    )
+
+
+@app.route(
+    "/admin/sorteos/<int:sorteo_id>/participantes/exportar"
+)
+@admin_requerido
+def exportar_participantes_excel(sorteo_id):
+
+    sorteo = Sorteo.query.get_or_404(sorteo_id)
+
+    participaciones = Participacion.query.filter_by(
+        sorteo_id=sorteo.id
+    ).order_by(
+        Participacion.fecha_creacion.asc()
+    ).all()
+
+    libro = Workbook()
+    hoja = libro.active
+    hoja.title = "Participantes"
+
+    encabezados = [
+        "ID",
+        "Nombre",
+        "Email",
+        "Teléfono",
+        "Pack",
+        "Chances",
+        "Números asignados",
+        "Estado participación",
+        "Estado pago",
+        "Monto",
+        "Método de pago",
+        "Fecha"
+    ]
+
+    hoja.append(encabezados)
+
+    for participacion in participaciones:
+
+        numeros = Numero.query.filter_by(
+            participacion_id=participacion.id
+        ).order_by(
+            Numero.numero
+        ).all()
+
+        pago = Pago.query.filter_by(
+            participacion_id=participacion.id
+        ).first()
+
+        numeros_texto = ", ".join(
+            str(numero.numero)
+            for numero in numeros
+        )
+
+        fecha = ""
+
+        if participacion.fecha_creacion:
+            fecha = participacion.fecha_creacion.strftime(
+                "%d/%m/%Y %H:%M"
+            )
+
+        hoja.append([
+            participacion.id,
+            participacion.nombre,
+            participacion.email,
+            participacion.telefono,
+            participacion.pack_nombre or "",
+            participacion.cantidad,
+            numeros_texto,
+            participacion.estado,
+            pago.estado if pago else "",
+            pago.monto if pago else "",
+            pago.metodo if pago else "",
+            fecha
+        ])
+
+    # Ajustar anchos para que el archivo sea legible
+    anchos = {
+        "A": 10,
+        "B": 25,
+        "C": 32,
+        "D": 20,
+        "E": 30,
+        "F": 12,
+        "G": 45,
+        "H": 22,
+        "I": 18,
+        "J": 15,
+        "K": 20,
+        "L": 20
+    }
+
+    for columna, ancho in anchos.items():
+        hoja.column_dimensions[columna].width = ancho
+
+    archivo = BytesIO()
+    libro.save(archivo)
+    archivo.seek(0)
+
+    nombre_archivo = (
+        f"participantes_sorteo_{sorteo.id}.xlsx"
+    )
+
+    return send_file(
+        archivo,
+        as_attachment=True,
+        download_name=nombre_archivo,
+        mimetype=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        )
     )
 
 
