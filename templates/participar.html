@@ -157,6 +157,32 @@
 
                         </div>
 
+                        <div class="aceptacion-terminos">
+
+                            <label class="terminos-check">
+                                <input
+                                    type="checkbox"
+                                    name="acepta_terminos"
+                                    value="1"
+                                    required
+                                >
+
+                                <span>
+                                    He leído y acepto los
+                                    <button
+                                        type="button"
+                                        class="abrir-terminos"
+                                        id="abrir-terminos"
+                                    >
+                                        Términos y Condiciones de Participación
+                                    </button>
+                                    y declaro ser mayor de 18 años y residente
+                                    en la República Argentina.
+                                </span>
+                            </label>
+
+                        </div>
+
                         <button
                             type="submit"
                             class="compra-boton"
@@ -185,6 +211,245 @@
         </p>
 
     </main>
+
+
+    <div
+        class="modal-terminos"
+        id="modal-terminos"
+        aria-hidden="true"
+    >
+        <div class="modal-terminos-fondo"></div>
+
+        <div
+            class="modal-terminos-contenido"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-terminos"
+        >
+            <div class="modal-terminos-cabecera">
+                <h2 id="titulo-terminos">
+                    Términos y Condiciones
+                </h2>
+
+                <button
+                    type="button"
+                    class="cerrar-terminos"
+                    id="cerrar-terminos"
+                    aria-label="Cerrar"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="modal-terminos-texto">
+
+                <p>
+                    Los presentes Términos y Condiciones regulan
+                    el uso del sitio Paranacito Pesca, el acceso
+                    a su comunidad privada vinculada a la pesca
+                    deportiva y la participación en las promociones
+                    y sorteos publicados en el sitio.
+                </p>
+
+                <h3>1. Servicio ofrecido</h3>
+                <p>
+                    Paranacito Pesca ofrece acceso a una comunidad
+                    privada en Telegram orientada a personas
+                    interesadas en la pesca deportiva, donde podrán
+                    compartirse contenidos, novedades, información
+                    y otros beneficios relacionados con la actividad.
+                    Cuando corresponda, los miembros podrán recibir
+                    participaciones en promociones o sorteos de
+                    artículos de pesca.
+                </p>
+
+                <h3>2. Requisitos</h3>
+                <p>
+                    Para utilizar los servicios y participar de los
+                    sorteos, el usuario deberá ser mayor de 18 años,
+                    residir en la República Argentina, proporcionar
+                    nombre, correo electrónico y teléfono válidos,
+                    y aceptar estos Términos y Condiciones.
+                </p>
+
+                <h3>3. Participaciones y números</h3>
+                <p>
+                    Cuando una modalidad otorgue participaciones,
+                    el sistema asignará automáticamente la cantidad
+                    correspondiente a la opción seleccionada.
+                    Los números serán asignados aleatoriamente y
+                    quedarán asociados a los datos proporcionados
+                    por el participante.
+                </p>
+
+                <h3>4. Acceso a la comunidad</h3>
+                <p>
+                    Cuando la modalidad contratada incluya acceso a
+                    la comunidad privada de Telegram, las
+                    instrucciones de ingreso serán proporcionadas
+                    mediante los canales indicados por Paranacito
+                    Pesca. El acceso es personal y no deberá
+                    utilizarse para facilitar el ingreso no
+                    autorizado de terceros.
+                </p>
+
+                <h3>5. Participación sin obligación de compra</h3>
+                <p>
+                    Los sorteos contemplarán una modalidad de
+                    participación sin obligación de compra. Las
+                    personas mayores de 18 años residentes en la
+                    República Argentina podrán solicitar una
+                    participación gratuita para el sorteo vigente
+                    enviando un correo a paranacitopesca@gmail.com
+                    con el asunto "Participación Gratuita - Sorteo
+                    de Pesca", indicando nombre completo, teléfono
+                    y correo electrónico.
+                </p>
+
+                <p>
+                    Se admitirá una participación gratuita por
+                    persona y por sorteo, salvo que las condiciones
+                    particulares establezcan una modalidad diferente
+                    conforme a la normativa aplicable.
+                </p>
+
+                <h3>6. Sorteo y ganador</h3>
+                <p>
+                    Cada sorteo informará sus premios, período de
+                    vigencia, requisitos y mecanismo de selección.
+                    Cuando se utilice AppSorteos, el ganador será
+                    seleccionado mediante dicha plataforma y el
+                    procedimiento podrá realizarse públicamente o
+                    transmitirse en vivo por los canales oficiales.
+                </p>
+
+                <h3>7. Pagos</h3>
+                <p>
+                    Los pagos serán procesados mediante Mercado Pago.
+                    Paranacito Pesca no almacena los datos completos
+                    de las tarjetas u otros medios de pago utilizados
+                    por el usuario. La confirmación de las
+                    participaciones estará sujeta a la correcta
+                    acreditación del pago.
+                </p>
+
+                <p>
+                    Las solicitudes de cancelación, devolución o
+                    arrepentimiento serán tratadas conforme a las
+                    condiciones de la operación y a los derechos
+                    reconocidos por la legislación argentina
+                    aplicable.
+                </p>
+
+                <h3>8. Premios y entrega</h3>
+                <p>
+                    Los premios serán informados en cada sorteo.
+                    Salvo que se indique expresamente algo diferente,
+                    no podrán ser sustituidos por dinero a solicitud
+                    del ganador. Cuando corresponda el envío,
+                    Paranacito Pesca asumirá su costo dentro de la
+                    República Argentina mediante Vía Cargo o el medio
+                    informado para el sorteo.
+                </p>
+
+                <h3>9. Datos personales</h3>
+                <p>
+                    Paranacito Pesca recopilará únicamente los datos
+                    necesarios para gestionar el servicio y las
+                    participaciones: nombre, correo electrónico y
+                    teléfono. Podrán utilizarse para identificar la
+                    participación, confirmar operaciones, enviar los
+                    números asignados, contactar al ganador, coordinar
+                    la entrega del premio y atender consultas.
+                </p>
+
+                <p>
+                    Paranacito Pesca no comercializará las bases de
+                    datos de sus usuarios. El tratamiento de los datos
+                    se realizará conforme a la Ley N.º 25.326 de
+                    Protección de Datos Personales y demás normativa
+                    aplicable.
+                </p>
+
+                <h3>10. Condiciones de cada sorteo</h3>
+                <p>
+                    Las condiciones particulares de cada sorteo
+                    formarán parte de estos Términos y Condiciones.
+                    Se informarán los premios, vigencia, alcance,
+                    requisitos, participaciones y procedimiento de
+                    selección del ganador cuando corresponda.
+                </p>
+
+                <h3>11. Modificaciones</h3>
+                <p>
+                    Paranacito Pesca podrá actualizar estos términos
+                    cuando resulte necesario. Las modificaciones no
+                    alterarán retroactivamente las condiciones
+                    esenciales de promociones ya iniciadas en
+                    perjuicio de quienes hayan participado.
+                </p>
+
+                <h3>12. Legislación aplicable</h3>
+                <p>
+                    Estos Términos y Condiciones se regirán por las
+                    leyes de la República Argentina. Ninguna
+                    disposición deberá interpretarse como una
+                    renuncia o limitación de los derechos reconocidos
+                    legalmente a consumidores y usuarios.
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-terminos-aceptar"
+                id="aceptar-terminos-modal"
+            >
+                Entendido
+            </button>
+
+        </div>
+    </div>
+
+    <script>
+        const modalTerminos =
+            document.getElementById("modal-terminos");
+
+        const abrirTerminos =
+            document.getElementById("abrir-terminos");
+
+        const cerrarTerminos =
+            document.getElementById("cerrar-terminos");
+
+        const aceptarTerminos =
+            document.getElementById("aceptar-terminos-modal");
+
+        const fondoTerminos =
+            modalTerminos.querySelector(".modal-terminos-fondo");
+
+        function mostrarTerminos() {
+            modalTerminos.classList.add("visible");
+            modalTerminos.setAttribute("aria-hidden", "false");
+            document.body.classList.add("modal-abierto");
+        }
+
+        function ocultarTerminos() {
+            modalTerminos.classList.remove("visible");
+            modalTerminos.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("modal-abierto");
+        }
+
+        abrirTerminos.addEventListener("click", mostrarTerminos);
+        cerrarTerminos.addEventListener("click", ocultarTerminos);
+        aceptarTerminos.addEventListener("click", ocultarTerminos);
+        fondoTerminos.addEventListener("click", ocultarTerminos);
+
+        document.addEventListener("keydown", function (evento) {
+            if (evento.key === "Escape") {
+                ocultarTerminos();
+            }
+        });
+    </script>
 
 </body>
 

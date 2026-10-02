@@ -1149,6 +1149,14 @@ def participar(sorteo_id):
         nombre = request.form.get("nombre", "").strip()
         email = request.form.get("email", "").strip()
         telefono = request.form.get("telefono", "").strip()
+        acepta_terminos = request.form.get("acepta_terminos")
+
+        if acepta_terminos != "1":
+            return (
+                "Debés aceptar los Términos y Condiciones "
+                "para continuar.",
+                400
+            )
 
         if not nombre:
             return "El nombre es obligatorio.", 400
