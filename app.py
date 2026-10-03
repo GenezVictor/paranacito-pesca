@@ -728,6 +728,45 @@ def admin_participantes(sorteo_id):
 
 
 @app.route(
+    "/admin/sorteos/<int:sorteo_id>/participantes/appsorteos"
+)
+@admin_requerido
+def participantes_appsorteos(sorteo_id):
+
+    sorteo = Sorteo.query.get_or_404(sorteo_id)
+
+    participaciones = Participacion.query.filter_by(
+        sorteo_id=sorteo.id,
+        estado="confirmada"
+    ).order_by(
+        Participacion.fecha_creacion.asc()
+    ).all()
+
+    lineas = []
+
+    for participacion in participaciones:
+
+        numeros = Numero.query.filter_by(
+            participacion_id=participacion.id,
+            estado="vendido"
+        ).order_by(
+            Numero.numero
+        ).all()
+
+        for numero in numeros:
+            lineas.append(
+                f"{participacion.nombre} {numero.numero}"
+            )
+
+    return {
+        "sorteo_id": sorteo.id,
+        "ventas_confirmadas": len(participaciones),
+        "total_numeros": len(lineas),
+        "lista": "\n".join(lineas)
+    }
+
+
+@app.route(
     "/admin/sorteos/<int:sorteo_id>/participantes/exportar"
 )
 @admin_requerido

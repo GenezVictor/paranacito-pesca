@@ -42,15 +42,31 @@
             {{ sorteo.titulo }}
         </p>
 
-        <a
-            href="{{ url_for(
-                'exportar_participantes_excel',
-                sorteo_id=sorteo.id
-            ) }}"
-            class="btn-participar"
-        >
-            Exportar Excel
-        </a>
+        <div class="acciones-participantes">
+
+            <a
+                href="{{ url_for(
+                    'exportar_participantes_excel',
+                    sorteo_id=sorteo.id
+                ) }}"
+                class="btn-participar"
+            >
+                Exportar Excel
+            </a>
+
+            <button
+                type="button"
+                class="btn-participar"
+                id="abrir-appsorteos"
+                data-url="{{ url_for(
+                    'participantes_appsorteos',
+                    sorteo_id=sorteo.id
+                ) }}"
+            >
+                Copiar para AppSorteos
+            </button>
+
+        </div>
 
 
         <div class="dashboard-sorteo">
@@ -444,6 +460,250 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 </script>
+
+
+    <div
+        class="modal-appsorteos"
+        id="modal-appsorteos"
+        aria-hidden="true"
+    >
+        <div class="modal-appsorteos-fondo"></div>
+
+        <div
+            class="modal-appsorteos-contenido"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-appsorteos"
+        >
+            <div class="modal-appsorteos-cabecera">
+
+                <div>
+                    <span class="admin-subtitulo">
+                        APP SORTEOS
+                    </span>
+
+                    <h2 id="titulo-appsorteos">
+                        Lista para AppSorteos
+                    </h2>
+                </div>
+
+                <button
+                    type="button"
+                    class="cerrar-appsorteos"
+                    id="cerrar-appsorteos"
+                    aria-label="Cerrar"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <div class="appsorteos-resumen">
+
+                <div>
+                    <strong id="appsorteos-ventas">—</strong>
+                    <span>Ventas confirmadas</span>
+                </div>
+
+                <div>
+                    <strong id="appsorteos-numeros">—</strong>
+                    <span>Números participantes</span>
+                </div>
+
+            </div>
+
+            <p
+                class="appsorteos-estado"
+                id="appsorteos-estado"
+            >
+                Preparando lista...
+            </p>
+
+            <textarea
+                id="appsorteos-lista"
+                class="appsorteos-lista"
+                readonly
+                placeholder="La lista aparecerá aquí."
+            ></textarea>
+
+            <button
+                type="button"
+                class="btn-participar"
+                id="copiar-appsorteos"
+                disabled
+            >
+                Copiar lista
+            </button>
+
+        </div>
+    </div>
+
+    <script>
+        const botonAppSorteos =
+            document.getElementById("abrir-appsorteos");
+
+        const modalAppSorteos =
+            document.getElementById("modal-appsorteos");
+
+        const cerrarAppSorteos =
+            document.getElementById("cerrar-appsorteos");
+
+        const fondoAppSorteos =
+            modalAppSorteos.querySelector(
+                ".modal-appsorteos-fondo"
+            );
+
+        const listaAppSorteos =
+            document.getElementById("appsorteos-lista");
+
+        const estadoAppSorteos =
+            document.getElementById("appsorteos-estado");
+
+        const ventasAppSorteos =
+            document.getElementById("appsorteos-ventas");
+
+        const numerosAppSorteos =
+            document.getElementById("appsorteos-numeros");
+
+        const copiarAppSorteos =
+            document.getElementById("copiar-appsorteos");
+
+
+        function cerrarModalAppSorteos() {
+            modalAppSorteos.classList.remove("visible");
+            modalAppSorteos.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+            document.body.classList.remove(
+                "modal-appsorteos-abierto"
+            );
+        }
+
+
+        botonAppSorteos.addEventListener(
+            "click",
+            async function () {
+
+                modalAppSorteos.classList.add("visible");
+                modalAppSorteos.setAttribute(
+                    "aria-hidden",
+                    "false"
+                );
+
+                document.body.classList.add(
+                    "modal-appsorteos-abierto"
+                );
+
+                listaAppSorteos.value = "";
+                ventasAppSorteos.textContent = "—";
+                numerosAppSorteos.textContent = "—";
+                copiarAppSorteos.disabled = true;
+
+                estadoAppSorteos.textContent =
+                    "Preparando lista...";
+
+                try {
+
+                    const respuesta = await fetch(
+                        botonAppSorteos.dataset.url
+                    );
+
+                    if (!respuesta.ok) {
+                        throw new Error(
+                            "No se pudo generar la lista."
+                        );
+                    }
+
+                    const datos = await respuesta.json();
+
+                    ventasAppSorteos.textContent =
+                        datos.ventas_confirmadas;
+
+                    numerosAppSorteos.textContent =
+                        datos.total_numeros;
+
+                    listaAppSorteos.value =
+                        datos.lista;
+
+                    if (datos.total_numeros > 0) {
+
+                        estadoAppSorteos.textContent =
+                            "Lista preparada correctamente.";
+
+                        copiarAppSorteos.disabled = false;
+
+                    } else {
+
+                        estadoAppSorteos.textContent =
+                            "No hay números confirmados "
+                            + "para copiar.";
+
+                    }
+
+                } catch (error) {
+
+                    estadoAppSorteos.textContent =
+                        "Ocurrió un error al preparar "
+                        + "la lista.";
+
+                }
+            }
+        );
+
+
+        copiarAppSorteos.addEventListener(
+            "click",
+            async function () {
+
+                try {
+
+                    await navigator.clipboard.writeText(
+                        listaAppSorteos.value
+                    );
+
+                    copiarAppSorteos.textContent =
+                        "¡Lista copiada!";
+
+                    setTimeout(function () {
+                        copiarAppSorteos.textContent =
+                            "Copiar lista";
+                    }, 2000);
+
+                } catch (error) {
+
+                    listaAppSorteos.select();
+
+                    document.execCommand("copy");
+
+                    copiarAppSorteos.textContent =
+                        "¡Lista copiada!";
+
+                }
+            }
+        );
+
+
+        cerrarAppSorteos.addEventListener(
+            "click",
+            cerrarModalAppSorteos
+        );
+
+        fondoAppSorteos.addEventListener(
+            "click",
+            cerrarModalAppSorteos
+        );
+
+        document.addEventListener(
+            "keydown",
+            function (evento) {
+
+                if (evento.key === "Escape") {
+                    cerrarModalAppSorteos();
+                }
+            }
+        );
+    </script>
 
 </body>
 
