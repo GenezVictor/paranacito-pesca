@@ -15,7 +15,17 @@ if not access_token:
     )
 
 
-sdk = mercadopago.SDK(access_token)
+from mercadopago.config import RequestOptions
+
+opciones_mp = RequestOptions(
+    connection_timeout=8.0,
+    max_retries=0
+)
+
+sdk = mercadopago.SDK(
+    access_token,
+    request_options=opciones_mp
+)
 
 
 def crear_preferencia(

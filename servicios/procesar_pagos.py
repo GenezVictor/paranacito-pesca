@@ -30,9 +30,13 @@ def procesar_pago_aprobado(id_pago, pago_mp):
         )
         return False
 
-    participacion = db.session.get(
-        Participacion,
-        participacion_id
+    # Bloquear la participación para coordinar
+    # confirmaciones y vencimientos concurrentes.
+    participacion = (
+        Participacion.query
+        .filter_by(id=participacion_id)
+        .with_for_update()
+        .first()
     )
 
     if not participacion:
@@ -40,17 +44,22 @@ def procesar_pago_aprobado(id_pago, pago_mp):
             f"No se encontró la participación "
             f"{participacion_id}."
         )
+        db.session.rollback()
         return False
 
-    pago = Pago.query.filter_by(
-        participacion_id=participacion.id
-    ).first()
+    pago = (
+        Pago.query
+        .filter_by(participacion_id=participacion.id)
+        .with_for_update()
+        .first()
+    )
 
     if not pago:
         print(
             f"No se encontró el pago de la "
             f"participación {participacion.id}."
         )
+        db.session.rollback()
         return False
 
     # Evitamos procesar nuevamente un pago ya confirmado.
@@ -61,7 +70,17 @@ def procesar_pago_aprobado(id_pago, pago_mp):
         print(
             f"El pago {id_pago} ya fue procesado."
         )
+        db.session.rollback()
         return True
+
+    if pago.estado == "aprobado":
+        print(
+            f"ALERTA: participación {participacion.id} "
+            f"ya tiene el pago {pago.id_externo}. "
+            f"Nuevo pago recibido: {id_pago}."
+        )
+        db.session.rollback()
+        return False
 
     # Verificamos que el monto pagado coincida
     # con el monto esperado.
@@ -71,20 +90,25 @@ def procesar_pago_aprobado(id_pago, pago_mp):
             f"Esperado: {pago.monto} | "
             f"Recibido: {monto_mp}"
         )
+        db.session.rollback()
         return False
 
     pago.estado = "aprobado"
     pago.id_externo = str(id_pago)
 
-    numeros = Numero.query.filter_by(
-        participacion_id=participacion.id
-    ).all()
+    numeros = (
+        Numero.query
+        .filter_by(participacion_id=participacion.id)
+        .with_for_update()
+        .all()
+    )
 
     enviar_confirmacion = False
 
     if (
-        participacion.estado == "reservado"
+        participacion.estado in ("reservado", "pago_incierto")
         and len(numeros) == participacion.cantidad
+        and all(numero.estado == "reservado" for numero in numeros)
     ):
         participacion.estado = "confirmada"
 

@@ -1371,6 +1371,19 @@ def participar(sorteo_id):
                 409
             )
 
+        # Guardar los valores antes de confirmar la transacción.
+        # Evita recargar cada objeto Numero desde PostgreSQL
+        # después de los commits.
+        numeros_para_mostrar = [
+            numero.numero
+            for numero in numeros_asignados
+        ]
+
+        ids_numeros_reservados = [
+            numero.id
+            for numero in numeros_asignados
+        ]
+
         participacion = Participacion(
             nombre=nombre,
             email=email,
@@ -1378,7 +1391,7 @@ def participar(sorteo_id):
             cantidad=cantidad,
             pack_nombre=pack.nombre,
             pack_precio=pack.precio,
-            estado="reservado",
+            estado="pago_incierto",
             fecha_expiracion=ahora_utc() + timedelta(minutes=15),
             sorteo_id=sorteo.id
         )
@@ -1401,14 +1414,34 @@ def participar(sorteo_id):
 
         db.session.add(pago)
 
+        participacion_id = participacion.id
+        titulo_preferencia = f"{sorteo.titulo} - {pack.nombre}"
+        precio_preferencia = pack.precio
+
+        # Datos independientes de SQLAlchemy para mostrar
+        # el resultado sin nuevas consultas después del commit.
+        from types import SimpleNamespace
+
+        resultado_sorteo = SimpleNamespace(
+            titulo=sorteo.titulo
+        )
+
+        resultado_participacion = SimpleNamespace(
+            nombre=participacion.nombre,
+            pack_nombre=participacion.pack_nombre,
+            pack_precio=participacion.pack_precio,
+            cantidad=participacion.cantidad,
+            fecha_expiracion=participacion.fecha_expiracion
+        )
+
         db.session.commit()
 
         try:
             respuesta_mp = crear_preferencia(
-                f"{sorteo.titulo} - {pack.nombre}",
+                titulo_preferencia,
                 1,
-                pack.precio,
-                participacion.id
+                precio_preferencia,
+                participacion_id
             )
 
             datos_mp = (
@@ -1431,44 +1464,101 @@ def participar(sorteo_id):
                     "necesarios para iniciar el pago."
                 )
 
-            pago.preferencia_id = preferencia_id
+            # Bloqueamos la participación para evitar
+            # sobrescribir una confirmación del webhook.
+            participacion_actual = (
+                Participacion.query
+                .filter_by(id=participacion_id)
+                .with_for_update()
+                .first()
+            )
+
+            if participacion_actual is None:
+                raise RuntimeError(
+                    "No se encontró la participación."
+                )
+
+            pago_actual = (
+                Pago.query
+                .filter_by(participacion_id=participacion_id)
+                .with_for_update()
+                .first()
+            )
+
+            if pago_actual is None:
+                raise RuntimeError(
+                    "No se encontró el pago."
+                )
+
+            if participacion_actual.estado == "pago_incierto":
+                if pago_actual.estado != "pendiente":
+                    raise RuntimeError(
+                        "El pago cambió de estado durante la operación."
+                    )
+
+                pago_actual.preferencia_id = preferencia_id
+                participacion_actual.estado = "reservado"
+
+            elif (
+                participacion_actual.estado == "confirmada"
+                and pago_actual.estado == "aprobado"
+            ):
+                # El webhook ya confirmó el pago.
+                # No revertimos su estado.
+                pago_actual.preferencia_id = preferencia_id
+
+            else:
+                raise RuntimeError(
+                    "La participación cambió a un estado inesperado."
+                )
 
             db.session.commit()
 
         except Exception as error:
-
             print(
-                "MERCADO PAGO: no se pudo crear "
-                f"la preferencia: {error}"
+                f"ALERTA: resultado incierto de Mercado Pago "
+                f"para participación {participacion_id}: {error}"
             )
 
-            for numero in numeros_asignados:
-                numero.estado = "disponible"
-                numero.participacion_id = None
+            db.session.rollback()
 
-            participacion.estado = "vencido"
-            participacion.fecha_expiracion = ahora_utc()
+            try:
+                participacion_actual = (
+                    Participacion.query
+                    .filter_by(id=participacion_id)
+                    .with_for_update()
+                    .first()
+                )
 
-            pago.estado = "cancelado"
+                if (
+                    participacion_actual is not None
+                    and participacion_actual.estado == "reservado"
+                ):
+                    participacion_actual.estado = "pago_incierto"
 
-            db.session.commit()
+                db.session.commit()
+
+            except Exception as error_db:
+                db.session.rollback()
+                print(
+                    f"ALERTA CRÍTICA: no se pudo proteger "
+                    f"la participación {participacion_id}: {error_db}"
+                )
 
             return (
-                "No pudimos iniciar el pago con Mercado Pago. "
-                "Tus números fueron liberados para que puedas "
-                "intentarlo nuevamente.",
+                "No pudimos confirmar el inicio del pago. "
+                "Tu solicitud quedó pendiente de verificación. "
+                "No intentes pagar nuevamente con un enlace anterior; "
+                "contactá al administrador indicando tu participación.",
                 503
             )
 
-        numeros = [
-            numero.numero
-            for numero in numeros_asignados
-        ]
+        numeros = numeros_para_mostrar
 
         return render_template(
             "resultado_asignacion.html",
-            sorteo=sorteo,
-            participacion=participacion,
+            sorteo=resultado_sorteo,
+            participacion=resultado_participacion,
             numeros=numeros,
             checkout_url=checkout_url
         )
@@ -1645,13 +1735,23 @@ def webhook_mercadopago():
         f"Firma de webhook válida para el pago {id_pago}."
     )
 
-    respuesta = consultar_pago(id_pago)
-
-    if respuesta["status"] != 200:
+    try:
+        respuesta = consultar_pago(id_pago)
+    except Exception as error:
         print(
-            f"No se pudo consultar el pago {id_pago}."
+            f"Error consultando el pago {id_pago}: {error}"
         )
-        return "OK", 200
+        return "Error temporal", 503
+
+    if (
+        not isinstance(respuesta, dict)
+        or respuesta.get("status") != 200
+        or not isinstance(respuesta.get("response"), dict)
+    ):
+        print(
+            f"No se pudo consultar correctamente el pago {id_pago}."
+        )
+        return "Error temporal", 503
 
     pago_mp = respuesta["response"]
 
@@ -1665,19 +1765,28 @@ def webhook_mercadopago():
         pago_mp.get("external_reference")
     )
 
+    if pago_mp.get("status") != "approved":
+        return "OK", 200
+
     try:
-        procesar_pago_aprobado(
+        procesado = procesar_pago_aprobado(
             id_pago,
             pago_mp
         )
 
-    except Exception as e:
-        print(
-            f"Error procesando el pago {id_pago}:",
-            e
-        )
+        if procesado is not True:
+            print(
+                f"ALERTA: pago {id_pago} aprobado "
+                "pero no confirmado localmente."
+            )
+            return "Pago pendiente de revisión", 503
 
+    except Exception as error:
+        print(
+            f"Error procesando el pago {id_pago}: {error}"
+        )
         db.session.rollback()
+        return "Error temporal", 503
 
     return "OK", 200
 

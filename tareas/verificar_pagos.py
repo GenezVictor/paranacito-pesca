@@ -16,10 +16,12 @@ if __name__ == "__main__":
 
         # Primero consultamos Mercado Pago para evitar
         # vencer una reserva cuyo pago ya fue aprobado.
-        verificar_pagos_pendientes()
+        verificaciones_fallidas = verificar_pagos_pendientes()
 
         # Después liberamos las reservas que realmente
         # continúan pendientes y ya expiraron.
-        liberar_participaciones_vencidas()
+        liberar_participaciones_vencidas(
+            excluir_ids=verificaciones_fallidas
+        )
 
         print("Tareas automáticas finalizadas.")
