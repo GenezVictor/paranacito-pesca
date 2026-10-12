@@ -639,61 +639,125 @@ def eliminar_foto(sorteo_id, foto_id):
 @admin_requerido
 def admin_participantes(sorteo_id):
 
+    from sqlalchemy import func
+
     sorteo = Sorteo.query.get_or_404(sorteo_id)
 
-    participaciones = Participacion.query.filter_by(
+    filtros_validos = {
+        "todos",
+        "confirmada",
+        "reservado",
+        "vencido",
+        "requiere_revision"
+    }
+
+    filtro = request.args.get("estado", "todos")
+
+    if filtro not in filtros_validos:
+        filtro = "todos"
+
+    try:
+        pagina = max(
+            1,
+            int(request.args.get("pagina", 1))
+        )
+    except (TypeError, ValueError):
+        pagina = 1
+
+    por_pagina = 25
+
+    consulta = Participacion.query.filter_by(
         sorteo_id=sorteo.id
-    ).order_by(
-        Participacion.fecha_creacion.desc()
-    ).all()
+    )
 
-    datos = []
+    if filtro != "todos":
+        consulta = consulta.filter(
+            Participacion.estado == filtro
+        )
 
-    for participacion in participaciones:
+    paginacion = consulta.order_by(
+        Participacion.fecha_creacion.desc(),
+        Participacion.id.desc()
+    ).paginate(
+        page=pagina,
+        per_page=por_pagina,
+        error_out=False
+    )
 
-        numeros = Numero.query.filter_by(
-            participacion_id=participacion.id
+    participaciones = paginacion.items
+    ids = [p.id for p in participaciones]
+
+    numeros_por_participacion = {
+        participacion_id: []
+        for participacion_id in ids
+    }
+
+    pagos_por_participacion = {}
+
+    if ids:
+
+        numeros = Numero.query.filter(
+            Numero.participacion_id.in_(ids)
         ).order_by(
             Numero.numero
         ).all()
 
-        pago = Pago.query.filter_by(
-            participacion_id=participacion.id
-        ).first()
+        for numero in numeros:
+            numeros_por_participacion[
+                numero.participacion_id
+            ].append(numero)
 
-        datos.append({
+        pagos = Pago.query.filter(
+            Pago.participacion_id.in_(ids)
+        ).order_by(
+            Pago.id.asc()
+        ).all()
+
+        for pago in pagos:
+            if pago.participacion_id not in pagos_por_participacion:
+                pagos_por_participacion[
+                    pago.participacion_id
+                ] = pago
+
+    datos = [
+        {
             "participacion": participacion,
-            "numeros": numeros,
-            "pago": pago
-        })
+            "numeros": numeros_por_participacion.get(
+                participacion.id, []
+            ),
+            "pago": pagos_por_participacion.get(
+                participacion.id
+            )
+        }
+        for participacion in participaciones
+    ]
 
-    disponibles = Numero.query.filter_by(
-        sorteo_id=sorteo.id,
-        estado="disponible"
-    ).count()
+    conteos_numeros = dict(
+        db.session.query(
+            Numero.estado,
+            func.count(Numero.id)
+        ).filter(
+            Numero.sorteo_id == sorteo.id
+        ).group_by(
+            Numero.estado
+        ).all()
+    )
 
-    reservados = Numero.query.filter_by(
-        sorteo_id=sorteo.id,
-        estado="reservado"
-    ).count()
+    conteos_participaciones = dict(
+        db.session.query(
+            Participacion.estado,
+            func.count(Participacion.id)
+        ).filter(
+            Participacion.sorteo_id == sorteo.id
+        ).group_by(
+            Participacion.estado
+        ).all()
+    )
 
-    vendidos = Numero.query.filter_by(
-        sorteo_id=sorteo.id,
-        estado="vendido"
-    ).count()
-
-    confirmadas = Participacion.query.filter_by(
-        sorteo_id=sorteo.id,
-        estado="confirmada"
-    ).count()
-
-    revision = Participacion.query.filter_by(
-        sorteo_id=sorteo.id,
-        estado="requiere_revision"
-    ).count()
-
-    pagos_aprobados = (
-        db.session.query(Pago)
+    recaudado = (
+        db.session.query(
+            func.coalesce(func.sum(Pago.monto), 0)
+        )
         .join(
             Participacion,
             Pago.participacion_id == Participacion.id
@@ -702,20 +766,25 @@ def admin_participantes(sorteo_id):
             Participacion.sorteo_id == sorteo.id,
             Pago.estado == "aprobado"
         )
-        .all()
-    )
-
-    recaudado = sum(
-        pago.monto
-        for pago in pagos_aprobados
+        .scalar()
     )
 
     estadisticas = {
-        "disponibles": disponibles,
-        "reservados": reservados,
-        "vendidos": vendidos,
-        "confirmadas": confirmadas,
-        "revision": revision,
+        "disponibles": conteos_numeros.get(
+            "disponible", 0
+        ),
+        "reservados": conteos_numeros.get(
+            "reservado", 0
+        ),
+        "vendidos": conteos_numeros.get(
+            "vendido", 0
+        ),
+        "confirmadas": conteos_participaciones.get(
+            "confirmada", 0
+        ),
+        "revision": conteos_participaciones.get(
+            "requiere_revision", 0
+        ),
         "recaudado": recaudado
     }
 
@@ -723,7 +792,9 @@ def admin_participantes(sorteo_id):
         "admin_participantes.html",
         sorteo=sorteo,
         datos=datos,
-        estadisticas=estadisticas
+        estadisticas=estadisticas,
+        paginacion=paginacion,
+        filtro_actual=filtro
     )
 
 

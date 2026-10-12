@@ -3644,3 +3644,36 @@ body.modal-appsorteos-abierto {
     }
 }
 
+
+/* Paginación de participantes */
+
+.paginacion-participantes {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin: 30px 0;
+    color: #ddd;
+}
+
+.paginacion-participantes a {
+    padding: 10px 18px;
+    border: 1px solid #f5a623;
+    border-radius: 8px;
+    color: #f5a623;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.paginacion-participantes a:hover {
+    background: #f5a623;
+    color: #111;
+}
+
+.filtros-participantes a {
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+}
+

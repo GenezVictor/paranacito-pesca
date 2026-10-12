@@ -124,45 +124,28 @@
 
         <div class="filtros-participantes">
 
-            <button
-                type="button"
-                class="filtro-participante activo"
-                data-filtro="todos"
-            >
-                Todos
-            </button>
+            {% for valor, etiqueta in [
+                ("todos", "Todos"),
+                ("confirmada", "Confirmados"),
+                ("reservado", "Reservados"),
+                ("vencido", "Vencidos"),
+                ("requiere_revision", "Revisión")
+            ] %}
 
-            <button
-                type="button"
-                class="filtro-participante"
-                data-filtro="confirmada"
-            >
-                Confirmados
-            </button>
+                <a
+                    href="{{ url_for(
+                        'admin_participantes',
+                        sorteo_id=sorteo.id,
+                        estado=valor,
+                        pagina=1
+                    ) }}"
+                    class="filtro-participante
+                    {% if filtro_actual == valor %}activo{% endif %}"
+                >
+                    {{ etiqueta }}
+                </a>
 
-            <button
-                type="button"
-                class="filtro-participante"
-                data-filtro="reservado"
-            >
-                Reservados
-            </button>
-
-            <button
-                type="button"
-                class="filtro-participante"
-                data-filtro="vencido"
-            >
-                Vencidos
-            </button>
-
-            <button
-                type="button"
-                class="filtro-participante"
-                data-filtro="requiere_revision"
-            >
-                Revisión
-            </button>
+            {% endfor %}
 
         </div>
 
@@ -411,55 +394,46 @@
 
         </section>
 
+        {% if paginacion.pages > 1 %}
+
+            <nav class="paginacion-participantes">
+
+                {% if paginacion.has_prev %}
+                    <a href="{{ url_for(
+                        'admin_participantes',
+                        sorteo_id=sorteo.id,
+                        estado=filtro_actual,
+                        pagina=paginacion.prev_num
+                    ) }}">
+                        ← Anterior
+                    </a>
+                {% endif %}
+
+                <span>
+                    Página {{ paginacion.page }}
+                    de {{ paginacion.pages }}
+                    · {{ paginacion.total }} participantes
+                </span>
+
+                {% if paginacion.has_next %}
+                    <a href="{{ url_for(
+                        'admin_participantes',
+                        sorteo_id=sorteo.id,
+                        estado=filtro_actual,
+                        pagina=paginacion.next_num
+                    ) }}">
+                        Siguiente →
+                    </a>
+                {% endif %}
+
+            </nav>
+
+        {% endif %}
+
     </main>
 
 
-<script>
 
-document.addEventListener("DOMContentLoaded", () => {
-
-    const botones = document.querySelectorAll(
-        ".filtro-participante"
-    );
-
-    const tarjetas = document.querySelectorAll(
-        ".participante-card"
-    );
-
-    botones.forEach((boton) => {
-
-        boton.addEventListener("click", () => {
-
-            const filtro = boton.dataset.filtro;
-
-            botones.forEach((b) => {
-                b.classList.remove("activo");
-            });
-
-            boton.classList.add("activo");
-
-            tarjetas.forEach((tarjeta) => {
-
-                const estado = tarjeta.dataset.estado;
-
-                if (
-                    filtro === "todos" ||
-                    estado === filtro
-                ) {
-                    tarjeta.style.display = "";
-                } else {
-                    tarjeta.style.display = "none";
-                }
-
-            });
-
-        });
-
-    });
-
-});
-
-</script>
 
 
     <div
