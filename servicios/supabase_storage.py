@@ -64,3 +64,94 @@ def eliminar_archivo_supabase(url):
     )
 
     return True
+
+
+def subir_comprobante_supabase(archivo):
+    from io import BytesIO
+    from PIL import Image
+
+    extensiones_permitidas = {
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "webp": "image/webp",
+        "pdf": "application/pdf"
+    }
+
+    if not archivo or not archivo.filename:
+        raise ValueError("No se seleccionó ningún comprobante.")
+
+    extension = archivo.filename.rsplit(".", 1)[-1].lower()
+
+    if extension not in extensiones_permitidas:
+        raise ValueError("Formato de comprobante no permitido.")
+
+    contenido = archivo.read()
+
+    if not contenido:
+        raise ValueError("El archivo está vacío.")
+
+    if len(contenido) > 5 * 1024 * 1024:
+        raise ValueError("El comprobante no puede superar los 5 MB.")
+
+    if extension == "pdf":
+        if not contenido.startswith(b"%PDF-"):
+            raise ValueError("El archivo PDF no es válido.")
+    else:
+        try:
+            imagen = Image.open(BytesIO(contenido))
+            imagen.verify()
+
+            formatos = {
+                "jpg": "JPEG",
+                "jpeg": "JPEG",
+                "png": "PNG",
+                "webp": "WEBP"
+            }
+
+            if imagen.format != formatos[extension]:
+                raise ValueError("El contenido no coincide con la extensión.")
+        except ValueError:
+            raise
+        except Exception:
+            raise ValueError("La imagen del comprobante no es válida.")
+
+    nombre_archivo = f"transferencias/{uuid4()}.{extension}"
+
+    cliente = obtener_cliente_supabase()
+
+    bucket = os.getenv(
+        "SUPABASE_BUCKET_COMPROBANTES",
+        "comprobantes"
+    )
+
+    cliente.storage.from_(bucket).upload(
+        nombre_archivo,
+        contenido,
+        {
+            "content-type": extensiones_permitidas[extension],
+            "upsert": "false"
+        }
+    )
+
+    return nombre_archivo
+
+
+def obtener_url_comprobante_supabase(ruta):
+    cliente = obtener_cliente_supabase()
+
+    bucket = os.getenv(
+        "SUPABASE_BUCKET_COMPROBANTES",
+        "comprobantes"
+    )
+
+    resultado = cliente.storage.from_(bucket).create_signed_url(
+        ruta,
+        600
+    )
+
+    return (
+        resultado.get("signedURL")
+        or resultado.get("signedUrl")
+        or resultado.get("signed_url")
+    )

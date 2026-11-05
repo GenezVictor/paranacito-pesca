@@ -20,11 +20,16 @@ from models.participacion import Participacion
 from models.pago import Pago
 from models.multimedia import Multimedia
 from models.pack import Pack
+from models.configuracion import ConfiguracionBancaria
 from servicios.vencimientos import liberar_participaciones_vencidas
 from servicios.mercado_pago import crear_preferencia, consultar_pago
 from servicios.procesar_pagos import procesar_pago_aprobado
 from servicios.archivos import guardar_imagen
-from servicios.supabase_storage import eliminar_archivo_supabase
+from servicios.supabase_storage import (
+    eliminar_archivo_supabase,
+    subir_comprobante_supabase,
+    obtener_url_comprobante_supabase
+)
 from servicios.videos import preparar_video
 
 import os
@@ -202,6 +207,52 @@ def admin_sorteos():
     return render_template(
         "admin_sorteos.html",
         sorteos=sorteos
+    )
+
+
+@app.route(
+    "/admin/configuracion-bancaria",
+    methods=["GET", "POST"]
+)
+@admin_requerido
+def configuracion_bancaria():
+
+    configuracion = ConfiguracionBancaria.query.first()
+
+    if configuracion is None:
+        configuracion = ConfiguracionBancaria()
+
+    if request.method == "POST":
+
+        if configuracion.id is None:
+            db.session.add(configuracion)
+
+        configuracion.titular = request.form.get(
+            "titular", ""
+        ).strip()
+
+        configuracion.cbu = request.form.get(
+            "cbu", ""
+        ).strip()
+
+        configuracion.alias = request.form.get(
+            "alias", ""
+        ).strip()
+
+        db.session.commit()
+
+        flash(
+            "Datos bancarios actualizados correctamente.",
+            "exito"
+        )
+
+        return redirect(
+            url_for("configuracion_bancaria")
+        )
+
+    return render_template(
+        "admin_configuracion_bancaria.html",
+        configuracion=configuracion
     )
 
 
@@ -1391,17 +1442,15 @@ def participar(sorteo_id):
             cantidad=cantidad,
             pack_nombre=pack.nombre,
             pack_precio=pack.precio,
-            estado="pago_incierto",
-            fecha_expiracion=ahora_utc() + timedelta(minutes=15),
+            estado="reservado",
+            fecha_expiracion=None,
             sorteo_id=sorteo.id
         )
 
         db.session.add(participacion)
-
         db.session.flush()
 
         for numero in numeros_asignados:
-
             numero.estado = "reservado"
             numero.participacion_id = participacion.id
 
@@ -1409,17 +1458,11 @@ def participar(sorteo_id):
             participacion_id=participacion.id,
             monto=pack.precio,
             estado="pendiente",
-            metodo="mercado_pago"
+            metodo="transferencia"
         )
 
         db.session.add(pago)
 
-        participacion_id = participacion.id
-        titulo_preferencia = f"{sorteo.titulo} - {pack.nombre}"
-        precio_preferencia = pack.precio
-
-        # Datos independientes de SQLAlchemy para mostrar
-        # el resultado sin nuevas consultas después del commit.
         from types import SimpleNamespace
 
         resultado_sorteo = SimpleNamespace(
@@ -1431,142 +1474,118 @@ def participar(sorteo_id):
             pack_nombre=participacion.pack_nombre,
             pack_precio=participacion.pack_precio,
             cantidad=participacion.cantidad,
-            fecha_expiracion=participacion.fecha_expiracion
+            fecha_expiracion=None,
+            id=participacion.id
         )
 
         db.session.commit()
 
-        try:
-            respuesta_mp = crear_preferencia(
-                titulo_preferencia,
-                1,
-                precio_preferencia,
-                participacion_id
-            )
-
-            datos_mp = (
-                respuesta_mp.get("response")
-                if isinstance(respuesta_mp, dict)
-                else None
-            )
-
-            if not isinstance(datos_mp, dict):
-                raise ValueError(
-                    "Mercado Pago no devolvió una respuesta válida."
-                )
-
-            preferencia_id = datos_mp.get("id")
-            checkout_url = datos_mp.get("init_point")
-
-            if not preferencia_id or not checkout_url:
-                raise ValueError(
-                    "Mercado Pago no devolvió los datos "
-                    "necesarios para iniciar el pago."
-                )
-
-            # Bloqueamos la participación para evitar
-            # sobrescribir una confirmación del webhook.
-            participacion_actual = (
-                Participacion.query
-                .filter_by(id=participacion_id)
-                .with_for_update()
-                .first()
-            )
-
-            if participacion_actual is None:
-                raise RuntimeError(
-                    "No se encontró la participación."
-                )
-
-            pago_actual = (
-                Pago.query
-                .filter_by(participacion_id=participacion_id)
-                .with_for_update()
-                .first()
-            )
-
-            if pago_actual is None:
-                raise RuntimeError(
-                    "No se encontró el pago."
-                )
-
-            if participacion_actual.estado == "pago_incierto":
-                if pago_actual.estado != "pendiente":
-                    raise RuntimeError(
-                        "El pago cambió de estado durante la operación."
-                    )
-
-                pago_actual.preferencia_id = preferencia_id
-                participacion_actual.estado = "reservado"
-
-            elif (
-                participacion_actual.estado == "confirmada"
-                and pago_actual.estado == "aprobado"
-            ):
-                # El webhook ya confirmó el pago.
-                # No revertimos su estado.
-                pago_actual.preferencia_id = preferencia_id
-
-            else:
-                raise RuntimeError(
-                    "La participación cambió a un estado inesperado."
-                )
-
-            db.session.commit()
-
-        except Exception as error:
-            print(
-                f"ALERTA: resultado incierto de Mercado Pago "
-                f"para participación {participacion_id}: {error}"
-            )
-
-            db.session.rollback()
-
-            try:
-                participacion_actual = (
-                    Participacion.query
-                    .filter_by(id=participacion_id)
-                    .with_for_update()
-                    .first()
-                )
-
-                if (
-                    participacion_actual is not None
-                    and participacion_actual.estado == "reservado"
-                ):
-                    participacion_actual.estado = "pago_incierto"
-
-                db.session.commit()
-
-            except Exception as error_db:
-                db.session.rollback()
-                print(
-                    f"ALERTA CRÍTICA: no se pudo proteger "
-                    f"la participación {participacion_id}: {error_db}"
-                )
-
-            return (
-                "No pudimos confirmar el inicio del pago. "
-                "Tu solicitud quedó pendiente de verificación. "
-                "No intentes pagar nuevamente con un enlace anterior; "
-                "contactá al administrador indicando tu participación.",
-                503
-            )
+        session["participacion_transferencia_id"] = participacion.id
 
         numeros = numeros_para_mostrar
+
+        configuracion = ConfiguracionBancaria.query.first()
 
         return render_template(
             "resultado_asignacion.html",
             sorteo=resultado_sorteo,
             participacion=resultado_participacion,
             numeros=numeros,
-            checkout_url=checkout_url
+            checkout_url=None,
+            transferencia_cbu=configuracion.cbu if configuracion else "",
+            transferencia_alias=configuracion.alias if configuracion else "",
+            transferencia_titular=configuracion.titular if configuracion else ""
         )
 
     return render_template(
         "participar.html",
         sorteo=sorteo
     )
+
+
+@app.route(
+    "/participacion/<int:participacion_id>/comprobante",
+    methods=["POST"]
+)
+def subir_comprobante(participacion_id):
+
+    if session.get("participacion_transferencia_id") != participacion_id:
+        return "No tenés autorización para esta participación.", 403
+
+    participacion = db.session.get(
+        Participacion,
+        participacion_id
+    )
+
+    if participacion is None:
+        return "Participación no encontrada.", 404
+
+    pago = Pago.query.filter_by(
+        participacion_id=participacion.id
+    ).first()
+
+    if (
+        pago is None
+        or pago.metodo != "transferencia"
+        or pago.estado != "pendiente"
+    ):
+        return "Esta participación no admite comprobantes nuevos.", 400
+
+    archivo = request.files.get("comprobante")
+
+    try:
+        comprobante_path = subir_comprobante_supabase(archivo)
+
+        pago.comprobante_path = comprobante_path
+        pago.estado = "en_revision"
+
+        db.session.commit()
+
+        session.pop("participacion_transferencia_id", None)
+
+        return render_template(
+            "comprobante_recibido.html"
+        )
+
+    except ValueError as error:
+        db.session.rollback()
+        return str(error), 400
+
+    except Exception as error:
+        db.session.rollback()
+        print(f"Error al recibir comprobante: {error}")
+        return "No se pudo recibir el comprobante. Intentá nuevamente.", 500
+
+
+@app.route(
+    "/admin/pagos/<int:pago_id>/comprobante"
+)
+@admin_requerido
+def ver_comprobante(pago_id):
+
+    pago = db.session.get(Pago, pago_id)
+
+    if (
+        pago is None
+        or pago.metodo != "transferencia"
+        or pago.estado != "en_revision"
+        or not pago.comprobante_path
+    ):
+        return "Comprobante no encontrado.", 404
+
+    try:
+        url = obtener_url_comprobante_supabase(
+            pago.comprobante_path
+        )
+
+        if not url:
+            return "No se pudo generar el enlace.", 500
+
+        return redirect(url)
+
+    except Exception as error:
+        print(f"Error al generar enlace del comprobante: {error}")
+        return "No se pudo abrir el comprobante.", 500
 
 
 @app.route(
@@ -1684,6 +1703,147 @@ def asignar_numeros_revision(participacion_id):
         url_for(
             "admin_participantes",
             sorteo_id=sorteo.id
+        )
+    )
+
+
+
+@app.route(
+    "/admin/pagos/<int:pago_id>/aprobar-transferencia",
+    methods=["POST"]
+)
+@admin_requerido
+def aprobar_transferencia(pago_id):
+
+    pago = db.session.get(Pago, pago_id)
+
+    if (
+        pago is None
+        or pago.metodo != "transferencia"
+        or pago.estado != "en_revision"
+    ):
+        return "Este pago ya no requiere revisión.", 400
+
+    participacion = db.session.get(
+        Participacion,
+        pago.participacion_id
+    )
+
+    if (
+        participacion is None
+        or participacion.estado != "reservado"
+    ):
+        return "La participación ya no está reservada.", 400
+
+    numeros = (
+        Numero.query
+        .filter_by(participacion_id=participacion.id)
+        .all()
+    )
+
+    if (
+        len(numeros) != participacion.cantidad
+        or any(numero.estado != "reservado" for numero in numeros)
+    ):
+        return "Los números reservados no son válidos.", 400
+
+    pago.estado = "aprobado"
+    participacion.estado = "confirmada"
+    participacion.fecha_expiracion = None
+
+    for numero in numeros:
+        numero.estado = "vendido"
+
+    db.session.commit()
+
+    try:
+        from servicios.email import (
+            preparar_confirmacion_pago,
+            enviar_email,
+        )
+
+        datos_email = preparar_confirmacion_pago(participacion)
+
+        enviado = enviar_email(
+            destinatario=datos_email["destinatario"],
+            asunto=datos_email["asunto"],
+            contenido_html=datos_email["html"],
+        )
+
+        if not enviado:
+            print(
+                f"No se pudo enviar el email de la participación "
+                f"{participacion.id}."
+            )
+
+    except Exception as error:
+        print(
+            f"Error enviando email de la participación "
+            f"{participacion.id}: {error}"
+        )
+
+    return redirect(
+        url_for(
+            "admin_participantes",
+            sorteo_id=participacion.sorteo_id
+        )
+    )
+
+
+
+@app.route(
+    "/admin/pagos/<int:pago_id>/rechazar-transferencia",
+    methods=["POST"]
+)
+@admin_requerido
+def rechazar_transferencia(pago_id):
+
+    pago = db.session.get(Pago, pago_id)
+
+    if (
+        pago is None
+        or pago.metodo != "transferencia"
+        or pago.estado != "en_revision"
+    ):
+        return "Este pago ya no requiere revisión.", 400
+
+    participacion = db.session.get(
+        Participacion,
+        pago.participacion_id
+    )
+
+    if (
+        participacion is None
+        or participacion.estado != "reservado"
+    ):
+        return "La participación ya no está reservada.", 400
+
+    numeros = (
+        Numero.query
+        .filter_by(participacion_id=participacion.id)
+        .all()
+    )
+
+    if (
+        len(numeros) != participacion.cantidad
+        or any(numero.estado != "reservado" for numero in numeros)
+    ):
+        return "Los números reservados no son válidos.", 400
+
+    for numero in numeros:
+        numero.estado = "disponible"
+        numero.participacion_id = None
+
+    pago.estado = "rechazado"
+    participacion.estado = "rechazada"
+    participacion.fecha_expiracion = None
+
+    db.session.commit()
+
+    return redirect(
+        url_for(
+            "admin_participantes",
+            sorteo_id=participacion.sorteo_id
         )
     )
 

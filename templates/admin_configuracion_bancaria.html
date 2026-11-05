@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos bancarios | Paranacito Pesca</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+    <main class="login-admin">
+
+        <div class="login-admin-card">
+
+            <span class="admin-subtitulo">
+                PARANACITO PESCA
+            </span>
+
+            <h1>Datos bancarios</h1>
+
+            <p>
+                Estos datos aparecerán cuando los participantes realicen una transferencia.
+            </p>
+
+            <form method="POST">
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <label for="titular">Titular de la cuenta</label>
+                <input
+                    type="text"
+                    id="titular"
+                    name="titular"
+                    value="{{ configuracion.titular }}"
+                    maxlength="150"
+                    required
+                >
+
+                <label for="cbu">CBU</label>
+                <input
+                    type="text"
+                    id="cbu"
+                    name="cbu"
+                    value="{{ configuracion.cbu }}"
+                    maxlength="22"
+                    required
+                >
+
+                <label for="alias">Alias</label>
+                <input
+                    type="text"
+                    id="alias"
+                    name="alias"
+                    value="{{ configuracion.alias }}"
+                    maxlength="100"
+                    required
+                >
+
+                <button type="submit">
+                    Guardar datos bancarios
+                </button>
+
+            </form>
+
+            <a
+                href="{{ url_for('admin_sorteos') }}"
+                class="login-volver"
+            >
+                ← Volver al administrador
+            </a>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

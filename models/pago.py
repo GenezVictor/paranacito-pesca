@@ -41,5 +41,10 @@ class Pago(db.Model):
         nullable=True
     )
 
+    comprobante_path = db.Column(
+        db.String(255),
+        nullable=True
+    )
+
     def __repr__(self):
         return f"<Pago {self.id} - {self.estado}>"

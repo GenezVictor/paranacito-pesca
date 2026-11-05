@@ -84,110 +84,70 @@
 
             <div class="resultado-pago">
 
-                <h2>Completá tu pago</h2>
+                <h2>Realizá tu transferencia</h2>
 
                 <p>
-                    Tus números están reservados durante:
+                    Tus números quedaron reservados. Transferí el importe
+                    indicado y adjuntá el comprobante.
                 </p>
 
-                <div
-                    id="temporizador"
-                    class="temporizador-compra"
-                >
-                    Calculando...
+                <div class="resultado-datos">
+                    <p>
+                        Titular
+                        <strong>{{ transferencia_titular or "Consultar con el administrador" }}</strong>
+                    </p>
+
+                    <p>
+                        CBU
+                        <strong>{{ transferencia_cbu or "Consultar con el administrador" }}</strong>
+                    </p>
+
+                    <p>
+                        Alias
+                        <strong>{{ transferencia_alias or "Consultar con el administrador" }}</strong>
+                    </p>
                 </div>
 
+                <p>
+                    Importe a transferir
+                    <strong class="resultado-total">
+                        ${{ participacion.pack_precio | moneda }}
+                    </strong>
+                </p>
+
+                <h3>Adjuntá tu comprobante</h3>
+
+                <form
+                    method="POST"
+                    action="{{ url_for('subir_comprobante', participacion_id=participacion.id) }}"
+                    enctype="multipart/form-data"
+                >
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                    <input
+                        type="file"
+                        name="comprobante"
+                        accept=".jpg,.jpeg,.png,.webp,.pdf"
+                        required
+                    >
+
+                    <button type="submit">
+                        Enviar comprobante
+                    </button>
+                </form>
+
                 <p class="temporizador-ayuda">
-                    Si el tiempo termina antes de que se confirme
-                    el pago, los números volverán a estar disponibles.
+                    Tu participación quedará pendiente hasta que
+                    el administrador verifique la transferencia.
                 </p>
-
-                <p
-                    id="mensaje-vencida"
-                    class="mensaje-vencida"
-                >
-                    Tu reserva venció. Los números fueron liberados.
-                </p>
-
-                <a
-                    id="boton-pago"
-                    class="boton-mercadopago"
-                    href="{{ checkout_url }}"
-                >
-                    Pagar ${{ participacion.pack_precio | moneda }}
-                    con Mercado Pago
-                </a>
 
             </div>
 
-        </section>
 
-        <a class="resultado-volver" href="/">
-            Volver al inicio
-        </a>
-
-    </main>
-
-    <script>
-        const fechaExpiracion = new Date(
-            "{{ participacion.fecha_expiracion.isoformat() }}Z"
-        );
-
-        const temporizador = document.getElementById(
-            "temporizador"
-        );
-
-        const botonPago = document.getElementById(
-            "boton-pago"
-        );
-
-        const mensajeVencida = document.getElementById(
-            "mensaje-vencida"
-        );
-
-        function actualizarTemporizador() {
-
-            const ahora = new Date();
-
-            const diferencia =
-                fechaExpiracion.getTime() -
-                ahora.getTime();
-
-            if (diferencia <= 0) {
-
-                temporizador.textContent = "00:00";
-
-                botonPago.classList.add(
-                    "deshabilitado"
-                );
-
-                mensajeVencida.style.display = "block";
-
-                return;
-            }
-
-            const totalSegundos =
-                Math.floor(diferencia / 1000);
-
-            const minutos =
-                Math.floor(totalSegundos / 60);
-
-            const segundos =
-                totalSegundos % 60;
-
-            temporizador.textContent =
-                String(minutos).padStart(2, "0")
-                + ":"
-                + String(segundos).padStart(2, "0");
-        }
-
-        actualizarTemporizador();
-
-        setInterval(
-            actualizarTemporizador,
-            1000
-        );
-    </script>
 
 </body>
 

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprobante recibido - Paranacito Pesca</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background:
+                radial-gradient(circle at top, #28170c, transparent 55%),
+                linear-gradient(135deg, #090d0b, #121914);
+            color: white;
+        }
+
+        .contenedor {
+            width: 100%;
+            max-width: 550px;
+            padding: 40px 30px;
+            text-align: center;
+            background: #1b211e;
+            border: 1px solid #343c37;
+            border-top: 4px solid #f5a623;
+            border-radius: 18px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .logo {
+            width: 150px;
+            max-width: 70%;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .check {
+            width: 65px;
+            height: 65px;
+            margin: 0 auto 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd12c, #ff8a1f);
+            color: #111714;
+            font-size: 35px;
+            font-weight: bold;
+        }
+
+        h1 {
+            margin: 0 0 15px;
+            font-size: 28px;
+            color: #ffad27;
+        }
+
+        p {
+            margin: 0;
+            color: #d1d5d3;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        @media (max-width: 480px) {
+            .contenedor {
+                padding: 35px 22px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="contenedor">
+        <img
+            src="{{ url_for('static', filename='img/logo-paranasito.jpeg') }}"
+            alt="Paranacito Pesca"
+            class="logo"
+        >
+
+        <div class="check">✓</div>
+
+        <h1>¡Comprobante recibido!</h1>
+
+        <p>
+            El administrador verificará la transferencia.
+            Una vez que apruebe tu pago, recibirás un correo
+            electrónico con tus números confirmados.
+        </p>
+    </main>
+</body>
+</html>

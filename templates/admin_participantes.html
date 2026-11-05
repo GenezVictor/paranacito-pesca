@@ -316,6 +316,41 @@
                                 </strong>
                             </div>
 
+                            {% if pago.metodo == "transferencia" and pago.estado == "en_revision" and pago.comprobante_path %}
+
+                                <div>
+                                    <a
+                                        href="{{ url_for('ver_comprobante', pago_id=pago.id) }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Ver comprobante
+                                    </a>
+                                </div>
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for('aprobar_transferencia', pago_id=pago.id) }}"
+                                >
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit">
+                                        Aprobar transferencia
+                                    </button>
+                                </form>
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for('rechazar_transferencia', pago_id=pago.id) }}"
+                                    onsubmit="return confirm('¿Rechazar esta transferencia y liberar los números?');"
+                                >
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit">
+                                        Rechazar transferencia
+                                    </button>
+                                </form>
+
+                            {% endif %}
+
                         {% else %}
 
                             <span>

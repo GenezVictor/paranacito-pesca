@@ -46,6 +46,13 @@
                     + Nuevo sorteo
                 </a>
 
+                <a
+                    href="{{ url_for('configuracion_bancaria') }}"
+                    class="btn-participar"
+                >
+                    Datos bancarios
+                </a>
+
                 <form
                     method="POST"
                     action="{{ url_for('admin_logout') }}"
