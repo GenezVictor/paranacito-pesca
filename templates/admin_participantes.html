@@ -166,7 +166,8 @@
                 ("confirmada", "Confirmados"),
                 ("reservado", "Reservados"),
                 ("vencido", "Vencidos"),
-                ("requiere_revision", "Revisión")
+                ("requiere_revision", "Revisión"),
+                ("cancelada", "Canceladas")
             ] %}
 
                 <a
@@ -327,35 +328,22 @@
 
                             <div>
                                 <small>Pago</small>
-
-                                <strong
-                                    class="
-                                        pago-estado
-                                        pago-{{ pago.estado }}
-                                    "
-                                >
+                                <strong class="pago-estado pago-{{ pago.estado }}">
                                     {{ pago.estado|upper }}
                                 </strong>
                             </div>
 
                             <div>
                                 <small>Monto</small>
-
-                                <strong>
-                                    ${{ pago.monto | moneda }}
-                                </strong>
+                                <strong>${{ pago.monto | moneda }}</strong>
                             </div>
 
                             <div>
                                 <small>Método</small>
-
-                                <strong>
-                                    {{ pago.metodo }}
-                                </strong>
+                                <strong>{{ pago.metodo }}</strong>
                             </div>
 
                             {% if pago.metodo == "transferencia" and pago.estado == "en_revision" and pago.comprobante_path %}
-
                                 <div>
                                     <a
                                         href="{{ url_for('ver_comprobante', pago_id=pago.id) }}"
@@ -367,35 +355,52 @@
                                         Ver comprobante
                                     </a>
                                 </div>
+                            {% endif %}
 
-                                <form
-                                    method="POST"
-                                    action="{{ url_for('aprobar_transferencia', pago_id=pago.id) }}"
-                                >
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="filtro-participante">
-                                        Aprobar transferencia
-                                    </button>
-                                </form>
+                            {% if p.estado == "reservado" and pago.metodo == "transferencia" and pago.estado in ["pendiente", "en_revision"] %}
 
-                                <form
-                                    method="POST"
-                                    action="{{ url_for('rechazar_transferencia', pago_id=pago.id) }}"
-                                    onsubmit="return confirm('¿Rechazar esta transferencia y liberar los números?');"
-                                >
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="filtro-participante">
-                                        Rechazar transferencia
-                                    </button>
-                                </form>
+                                <div class="acciones-transferencia">
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for('aprobar_transferencia', pago_id=pago.id) }}"
+                                        onsubmit="return confirm('¿Confirmar el pago y asignar los números como vendidos?');"
+                                    >
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="accion-aprobar">
+                                            Aprobar transferencia
+                                        </button>
+                                    </form>
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for('rechazar_transferencia', pago_id=pago.id) }}"
+                                        onsubmit="return confirm('¿Rechazar esta transferencia y liberar los números?');"
+                                    >
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="accion-rechazar">
+                                            Rechazar transferencia
+                                        </button>
+                                    </form>
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for('liberar_reserva', participacion_id=p.id) }}"
+                                        onsubmit="return confirm('¿Liberar esta reserva y devolver sus números al sorteo? Esta acción no rechaza el pago.');"
+                                    >
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="accion-liberar">
+                                            Liberar reserva
+                                        </button>
+                                    </form>
+
+                                </div>
 
                             {% endif %}
 
                         {% else %}
 
-                            <span>
-                                Sin información de pago
-                            </span>
+                            <span>Sin información de pago</span>
 
                         {% endif %}
 

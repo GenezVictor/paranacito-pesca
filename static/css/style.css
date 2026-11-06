@@ -3704,3 +3704,94 @@ body.modal-appsorteos-abierto {
 .selector-comprobante::file-selector-button:hover {
     background: #ffc044;
 }
+
+
+/* ACCIONES DE TRANSFERENCIA */
+
+.acciones-transferencia {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding-top: 15px;
+    border-top: 1px solid #343c37;
+}
+
+.acciones-transferencia form {
+    margin: 0;
+}
+
+.acciones-transferencia button {
+    padding: 10px 14px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.accion-aprobar {
+    background: #244d32;
+    color: #72dc93;
+    border-color: #39734b !important;
+}
+
+.accion-rechazar {
+    background: #4a2525;
+    color: #ff8989;
+    border-color: #713b3b !important;
+}
+
+.accion-liberar {
+    background: #343c37;
+    color: #d0d6d2;
+    border-color: #505a53 !important;
+}
+
+.acciones-transferencia button:hover {
+    filter: brightness(1.2);
+}
+
+
+/* AJUSTE DE FILA PARA ACCIONES DE TRANSFERENCIA */
+
+.acciones-transferencia {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.acciones-transferencia form {
+    display: flex;
+    flex: 0 0 auto;
+    width: auto;
+    margin: 0;
+}
+
+.acciones-transferencia button {
+    width: auto;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .acciones-transferencia {
+        gap: 8px;
+    }
+
+    .acciones-transferencia button {
+        padding: 9px 10px;
+        font-size: 11px;
+    }
+}
+
+
+/* CORRECCION DE DIRECCION DE ACCIONES */
+
+.participante-pago > .acciones-transferencia {
+    flex-direction: row;
+    align-items: center;
+}

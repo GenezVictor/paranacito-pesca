@@ -699,7 +699,8 @@ def admin_participantes(sorteo_id):
         "confirmada",
         "reservado",
         "vencido",
-        "requiere_revision"
+        "requiere_revision",
+        "cancelada"
     }
 
     filtro = request.args.get("estado", "todos")
@@ -728,13 +729,48 @@ def admin_participantes(sorteo_id):
         )
 
     if buscar:
+        numero_buscado = buscar
+
+        numeros_coincidentes = db.session.query(
+            Numero.id
+        ).filter(
+            Numero.participacion_id == Participacion.id,
+            Numero.sorteo_id == sorteo.id,
+            Numero.numero.cast(db.String).ilike(f"%{numero_buscado}%")
+        ).exists()
+
         consulta = consulta.filter(
-            Participacion.email.ilike(f"%{buscar}%")
+            db.or_(
+                Participacion.nombre.ilike(f"%{buscar}%"),
+                Participacion.email.ilike(f"%{buscar}%"),
+                Participacion.telefono.ilike(f"%{buscar}%"),
+                numeros_coincidentes
+            )
         )
 
-    paginacion = consulta.order_by(
+    ordenamientos = []
+
+    if buscar.isdigit():
+        numero_exacto = db.session.query(
+            Numero.id
+        ).filter(
+            Numero.participacion_id == Participacion.id,
+            Numero.sorteo_id == sorteo.id,
+            Numero.numero == int(buscar)
+        ).exists()
+
+        from sqlalchemy import case
+        ordenamientos.append(
+            case((numero_exacto, 0), else_=1)
+        )
+
+    ordenamientos.extend([
         Participacion.fecha_creacion.desc(),
         Participacion.id.desc()
+    ])
+
+    paginacion = consulta.order_by(
+        *ordenamientos
     ).paginate(
         page=pagina,
         per_page=por_pagina,
@@ -1532,7 +1568,8 @@ def subir_comprobante(participacion_id):
     ).first()
 
     if (
-        pago is None
+        participacion.estado != "reservado"
+        or pago is None
         or pago.metodo != "transferencia"
         or pago.estado != "pendiente"
     ):
@@ -1727,7 +1764,7 @@ def aprobar_transferencia(pago_id):
     if (
         pago is None
         or pago.metodo != "transferencia"
-        or pago.estado != "en_revision"
+        or pago.estado not in ("pendiente", "en_revision")
     ):
         return "Este pago ya no requiere revisión.", 400
 
@@ -1810,7 +1847,7 @@ def rechazar_transferencia(pago_id):
     if (
         pago is None
         or pago.metodo != "transferencia"
-        or pago.estado != "en_revision"
+        or pago.estado not in ("pendiente", "en_revision")
     ):
         return "Este pago ya no requiere revisión.", 400
 
@@ -1843,6 +1880,63 @@ def rechazar_transferencia(pago_id):
 
     pago.estado = "rechazado"
     participacion.estado = "rechazada"
+    participacion.fecha_expiracion = None
+
+    db.session.commit()
+
+    return redirect(
+        url_for(
+            "admin_participantes",
+            sorteo_id=participacion.sorteo_id
+        )
+    )
+
+
+@app.route(
+    "/admin/participaciones/<int:participacion_id>/liberar",
+    methods=["POST"]
+)
+@admin_requerido
+def liberar_reserva(participacion_id):
+
+    participacion = db.session.get(
+        Participacion,
+        participacion_id
+    )
+
+    if participacion is None:
+        return "Participación no encontrada.", 404
+
+    if participacion.estado != "reservado":
+        return "Esta participación ya no está reservada.", 400
+
+    pago = Pago.query.filter_by(
+        participacion_id=participacion.id
+    ).first()
+
+    if (
+        pago is None
+        or pago.metodo != "transferencia"
+        or pago.estado not in ("pendiente", "en_revision")
+    ):
+        return "Esta reserva no admite liberación manual.", 400
+
+    numeros = Numero.query.filter_by(
+        participacion_id=participacion.id
+    ).all()
+
+    if (
+        len(numeros) != participacion.cantidad
+        or any(numero.estado != "reservado" for numero in numeros)
+    ):
+        return "Los números reservados no son válidos.", 400
+
+    for numero in numeros:
+        numero.estado = "disponible"
+        numero.participacion_id = None
+
+    pago.estado = "cancelado"
+    participacion.estado = "cancelada"
     participacion.fecha_expiracion = None
 
     db.session.commit()
