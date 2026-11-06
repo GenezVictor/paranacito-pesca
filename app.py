@@ -703,6 +703,7 @@ def admin_participantes(sorteo_id):
     }
 
     filtro = request.args.get("estado", "todos")
+    buscar = request.args.get("buscar", "").strip()
 
     if filtro not in filtros_validos:
         filtro = "todos"
@@ -724,6 +725,11 @@ def admin_participantes(sorteo_id):
     if filtro != "todos":
         consulta = consulta.filter(
             Participacion.estado == filtro
+        )
+
+    if buscar:
+        consulta = consulta.filter(
+            Participacion.email.ilike(f"%{buscar}%")
         )
 
     paginacion = consulta.order_by(
@@ -845,7 +851,8 @@ def admin_participantes(sorteo_id):
         datos=datos,
         estadisticas=estadisticas,
         paginacion=paginacion,
-        filtro_actual=filtro
+        filtro_actual=filtro,
+        buscar_actual=buscar
     )
 
 

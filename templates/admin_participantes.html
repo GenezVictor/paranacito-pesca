@@ -122,6 +122,43 @@
         </div>
 
 
+        <form
+            method="GET"
+            action="{{ url_for('admin_participantes', sorteo_id=sorteo.id) }}"
+            style="display:flex; gap:8px; margin:20px 0; flex-wrap:wrap;"
+        >
+            <input
+                type="hidden"
+                name="estado"
+                value="{{ filtro_actual }}"
+            >
+
+            <input
+                type="text"
+                name="buscar"
+                value="{{ buscar_actual }}"
+                placeholder="Buscar por correo electrónico..."
+                style="flex:1; min-width:220px; padding:10px; background:#171d1a; color:#e5e9e6; border:1px solid #343c37; border-radius:8px; font-size:13px;"
+            >
+
+            <button type="submit" class="filtro-participante">Buscar</button>
+
+            {% if buscar_actual %}
+                <a href="{{ url_for(
+                    'admin_participantes',
+                    sorteo_id=sorteo.id,
+                    estado=filtro_actual
+                ) }}"
+                class="filtro-participante"
+                style="text-decoration:none; display:inline-flex; align-items:center;"
+                >
+                    Limpiar
+                </a>
+            {% endif %}
+        </form>
+
+
+
         <div class="filtros-participantes">
 
             {% for valor, etiqueta in [
@@ -137,6 +174,7 @@
                         'admin_participantes',
                         sorteo_id=sorteo.id,
                         estado=valor,
+                        buscar=buscar_actual,
                         pagina=1
                     ) }}"
                     class="filtro-participante
@@ -323,6 +361,8 @@
                                         href="{{ url_for('ver_comprobante', pago_id=pago.id) }}"
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        class="filtro-participante"
+                                        style="text-decoration:none; display:inline-flex; align-items:center;"
                                     >
                                         Ver comprobante
                                     </a>
@@ -333,7 +373,7 @@
                                     action="{{ url_for('aprobar_transferencia', pago_id=pago.id) }}"
                                 >
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit">
+                                    <button type="submit" class="filtro-participante">
                                         Aprobar transferencia
                                     </button>
                                 </form>
@@ -344,7 +384,7 @@
                                     onsubmit="return confirm('¿Rechazar esta transferencia y liberar los números?');"
                                 >
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit">
+                                    <button type="submit" class="filtro-participante">
                                         Rechazar transferencia
                                     </button>
                                 </form>
@@ -438,6 +478,7 @@
                         'admin_participantes',
                         sorteo_id=sorteo.id,
                         estado=filtro_actual,
+                        buscar=buscar_actual,
                         pagina=paginacion.prev_num
                     ) }}">
                         ← Anterior
@@ -455,6 +496,7 @@
                         'admin_participantes',
                         sorteo_id=sorteo.id,
                         estado=filtro_actual,
+                        buscar=buscar_actual,
                         pagina=paginacion.next_num
                     ) }}">
                         Siguiente →
