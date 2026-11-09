@@ -447,9 +447,7 @@
                         {% if p.fecha_creacion %}
 
                             Creado:
-                            {{ p.fecha_creacion.strftime(
-                                "%d/%m/%Y %H:%M"
-                            ) }}
+                            {{ p.fecha_creacion | fecha_argentina }}
 
                         {% else %}
 

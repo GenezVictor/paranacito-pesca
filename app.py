@@ -1,4 +1,5 @@
 from pathlib import Path
+from zoneinfo import ZoneInfo
 from flask import (
     Flask,
     render_template,
@@ -35,7 +36,7 @@ from servicios.videos import preparar_video
 import os
 import random
 from io import BytesIO
-from datetime import timedelta
+from datetime import timedelta, timezone
 from openpyxl import Workbook
 from servicios.fechas import ahora_utc
 
@@ -92,6 +93,19 @@ def formato_moneda(valor):
     entero, decimales = f"{numero:,.2f}".split(".")
     entero = entero.replace(",", ".")
     return f"{entero},{decimales}"
+
+
+@app.template_filter("fecha_argentina")
+def fecha_argentina(fecha):
+    if not fecha:
+        return ""
+
+    if fecha.tzinfo is None:
+        fecha = fecha.replace(tzinfo=timezone.utc)
+
+    return fecha.astimezone(
+        ZoneInfo("America/Argentina/Buenos_Aires")
+    ).strftime("%d/%m/%Y %H:%M")
 
 
 def admin_requerido(funcion):
