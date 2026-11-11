@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Administrar ganadores | Paranacito Pesca</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+    <main class="admin-contenedor">
+
+        <div class="admin-encabezado">
+
+            <div>
+                <span class="admin-subtitulo">PARANACITO PESCA</span>
+                <h1>Ganadores</h1>
+
+                <p class="admin-descripcion">
+                    Administrá las publicaciones y las pruebas de entrega de premios.
+                </p>
+            </div>
+
+            <div class="admin-acciones-principales">
+
+                <a
+                    href="{{ url_for('nuevo_ganador') }}"
+                    class="btn-participar"
+                >
+                    + Nuevo ganador
+                </a>
+
+                <a
+                    href="{{ url_for('admin_sorteos') }}"
+                    class="admin-boton"
+                >
+                    ← Volver
+                </a>
+
+            </div>
+
+        </div>
+
+        {% for ganador in ganadores %}
+
+            <article class="admin-sorteo">
+
+                <div class="admin-imagen">
+
+                    {% set primera_imagen = ganador.multimedia
+                        | selectattr("tipo", "equalto", "imagen")
+                        | first
+                    %}
+
+                    {% if primera_imagen %}
+
+                        <img
+                            src="{{ primera_imagen.url }}"
+                            alt="{{ ganador.titulo }}"
+                        >
+
+                    {% else %}
+
+                        <div class="admin-sin-imagen">
+                            Sin imagen
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+                <div class="admin-info">
+
+                    {% if ganador.activo %}
+                        <span class="admin-estado activo">PUBLICADO</span>
+                    {% else %}
+                        <span class="admin-estado inactivo">BORRADOR</span>
+                    {% endif %}
+
+                    <h2>{{ ganador.titulo }}</h2>
+
+                    <p class="admin-descripcion">
+                        {{ ganador.descripcion or "Sin descripción." }}
+                    </p>
+
+                    <div class="admin-datos">
+
+                        <span>
+                            <strong>{{ ganador.fecha.strftime("%d/%m/%Y") }}</strong>
+                            Fecha
+                        </span>
+
+                        <span>
+                            <strong>
+                                {{ ganador.multimedia | selectattr("tipo", "equalto", "imagen") | list | length }}
+                            </strong>
+                            Fotos
+                        </span>
+
+                        <span>
+                            <strong>
+                                {{ ganador.multimedia | selectattr("tipo", "equalto", "video") | list | length }}
+                            </strong>
+                            Videos
+                        </span>
+
+                    </div>
+
+                    <div class="admin-acciones">
+
+                        <a
+                            href="{{ url_for('editar_ganador', ganador_id=ganador.id) }}"
+                            class="admin-boton"
+                        >
+                            Editar
+                        </a>
+
+                        <form
+                            method="POST"
+                            action="{{ url_for('eliminar_ganador', ganador_id=ganador.id) }}"
+                            onsubmit="return confirm('¿Seguro que querés eliminar esta publicación y todos sus archivos?');"
+                        >
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="pack-eliminar-boton"
+                            >
+                                Eliminar
+                            </button>
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        {% else %}
+
+            <div class="sin-sorteos">
+                <p>Todavía no hay ganadores publicados.</p>
+            </div>
+
+        {% endfor %}
+
+    </main>
+
+</body>
+</html>

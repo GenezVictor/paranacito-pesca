@@ -22,21 +22,25 @@ from models.pago import Pago
 from models.multimedia import Multimedia
 from models.pack import Pack
 from models.configuracion import ConfiguracionBancaria
+from models.ganador import Ganador, GanadorMultimedia
 from servicios.vencimientos import liberar_participaciones_vencidas
 from servicios.mercado_pago import crear_preferencia, consultar_pago
 from servicios.procesar_pagos import procesar_pago_aprobado
 from servicios.archivos import guardar_imagen
+from servicios.archivos_ganadores import guardar_imagen_ganador
 from servicios.supabase_storage import (
     eliminar_archivo_supabase,
     subir_comprobante_supabase,
     obtener_url_comprobante_supabase
 )
 from servicios.videos import preparar_video
+from servicios.videos_ganadores import preparar_video_ganador
 
 import os
 import random
 from io import BytesIO
 from datetime import timedelta, timezone
+from datetime import date
 from openpyxl import Workbook
 from servicios.fechas import ahora_utc
 
@@ -190,7 +194,8 @@ def admin_logout():
 @app.context_processor
 def utilidades_templates():
     return {
-        "preparar_video": preparar_video
+        "preparar_video": preparar_video,
+        "preparar_video_ganador": preparar_video_ganador
     }
 
 
@@ -210,6 +215,22 @@ def inicio():
     )
 
 
+@app.route("/ganadores")
+def ganadores_publicos():
+
+    ganadores = Ganador.query.filter_by(
+        activo=True
+    ).order_by(
+        Ganador.fecha.desc(),
+        Ganador.id.desc()
+    ).all()
+
+    return render_template(
+        "ganadores.html",
+        ganadores=ganadores
+    )
+
+
 @app.route("/admin/sorteos")
 @admin_requerido
 def admin_sorteos():
@@ -222,6 +243,387 @@ def admin_sorteos():
         "admin_sorteos.html",
         sorteos=sorteos
     )
+
+
+@app.route("/admin/ganadores")
+@admin_requerido
+def admin_ganadores():
+
+    ganadores = Ganador.query.order_by(
+        Ganador.fecha.desc(),
+        Ganador.id.desc()
+    ).all()
+
+    return render_template(
+        "admin_ganadores.html",
+        ganadores=ganadores
+    )
+
+
+@app.route("/admin/ganadores/nuevo", methods=["GET", "POST"])
+@admin_requerido
+def nuevo_ganador():
+
+    if request.method == "GET":
+        return render_template(
+            "admin_formulario_ganador.html",
+            ganador=None,
+            imagenes=[],
+            videos=[],
+            fecha_hoy=date.today().isoformat()
+        )
+
+    from urllib.parse import urlparse
+
+    titulo = request.form.get("titulo", "").strip()
+    descripcion = request.form.get("descripcion", "").strip()
+    fecha_texto = request.form.get("fecha", "").strip()
+    activo = request.form.get("activo") == "1"
+
+    if not titulo:
+        flash("El título es obligatorio.", "error")
+        return redirect(url_for("nuevo_ganador"))
+
+    if len(titulo) > 150:
+        flash("El título no puede superar los 150 caracteres.", "error")
+        return redirect(url_for("nuevo_ganador"))
+
+    try:
+        fecha_ganador = date.fromisoformat(fecha_texto)
+    except ValueError:
+        flash("La fecha ingresada no es válida.", "error")
+        return redirect(url_for("nuevo_ganador"))
+
+    urls_videos = [
+        linea.strip()
+        for linea in request.form.get("urls_videos", "").splitlines()
+        if linea.strip()
+    ]
+
+    for url in urls_videos:
+        try:
+            parsed = urlparse(url)
+            host = parsed.hostname
+            puerto = parsed.port
+        except ValueError:
+            host = None
+
+        if (
+            len(url) > 500
+            or parsed.scheme not in ("http", "https")
+            or not host
+            or parsed.username
+            or parsed.password
+        ):
+            flash(f"El enlace de video no es válido: {url[:100]}", "error")
+            return redirect(url_for("nuevo_ganador"))
+
+    imagenes = [
+        archivo
+        for archivo in request.files.getlist("imagenes")
+        if archivo and archivo.filename
+    ]
+
+    urls_imagenes = []
+
+    try:
+        for imagen in imagenes:
+            url = guardar_imagen_ganador(imagen)
+            urls_imagenes.append(url)
+
+        ganador = Ganador(
+            titulo=titulo,
+            descripcion=descripcion or None,
+            fecha=fecha_ganador,
+            activo=activo
+        )
+
+        db.session.add(ganador)
+        db.session.flush()
+
+        orden = 0
+
+        for url in urls_imagenes:
+            db.session.add(
+                GanadorMultimedia(
+                    ganador_id=ganador.id,
+                    tipo="imagen",
+                    url=url,
+                    orden=orden
+                )
+            )
+            orden += 1
+
+        for url in urls_videos:
+            db.session.add(
+                GanadorMultimedia(
+                    ganador_id=ganador.id,
+                    tipo="video",
+                    url=url,
+                    orden=orden
+                )
+            )
+            orden += 1
+
+        db.session.commit()
+
+    except Exception as error:
+        db.session.rollback()
+
+        for url in urls_imagenes:
+            try:
+                eliminar_archivo_supabase(url)
+            except Exception:
+                app.logger.exception(
+                    "No se pudo limpiar una imagen de Ganadores."
+                )
+
+        if isinstance(error, ValueError):
+            mensaje = str(error)
+        else:
+            app.logger.exception("Error al crear una publicación de Ganadores.")
+            mensaje = "No se pudo guardar la publicación. Revisá la conexión e intentá nuevamente."
+
+        flash(mensaje, "error")
+        return redirect(url_for("nuevo_ganador"))
+
+    flash("La publicación se creó correctamente.", "success")
+    return redirect(url_for("admin_ganadores"))
+
+
+@app.route(
+    "/admin/ganadores/<int:ganador_id>/editar",
+    methods=["GET", "POST"]
+)
+@admin_requerido
+def editar_ganador(ganador_id):
+
+    from urllib.parse import urlparse
+
+    ganador = Ganador.query.get_or_404(ganador_id)
+
+    imagenes_actuales = [
+        item for item in ganador.multimedia
+        if item.tipo == "imagen"
+    ]
+
+    videos_actuales = [
+        item for item in ganador.multimedia
+        if item.tipo == "video"
+    ]
+
+    if request.method == "GET":
+        return render_template(
+            "admin_formulario_ganador.html",
+            ganador=ganador,
+            imagenes=imagenes_actuales,
+            videos=videos_actuales,
+            fecha_hoy=date.today().isoformat()
+        )
+
+    titulo = request.form.get("titulo", "").strip()
+    descripcion = request.form.get("descripcion", "").strip()
+    fecha_texto = request.form.get("fecha", "").strip()
+    activo = request.form.get("activo") == "1"
+
+    if not titulo or len(titulo) > 150:
+        flash("Ingresá un título válido de hasta 150 caracteres.", "error")
+        return redirect(url_for("editar_ganador", ganador_id=ganador.id))
+
+    try:
+        fecha_ganador = date.fromisoformat(fecha_texto)
+    except ValueError:
+        flash("La fecha ingresada no es válida.", "error")
+        return redirect(url_for("editar_ganador", ganador_id=ganador.id))
+
+    urls_videos = [
+        linea.strip()
+        for linea in request.form.get("urls_videos", "").splitlines()
+        if linea.strip()
+    ]
+
+    for url in urls_videos:
+        try:
+            parsed = urlparse(url)
+            host = parsed.hostname
+            _ = parsed.port
+        except ValueError:
+            flash("Uno de los enlaces de video no es válido.", "error")
+            return redirect(url_for("editar_ganador", ganador_id=ganador.id))
+
+        if (
+            len(url) > 500
+            or parsed.scheme not in ("http", "https")
+            or not host
+            or parsed.username
+            or parsed.password
+        ):
+            flash("Uno de los enlaces de video no es válido.", "error")
+            return redirect(url_for("editar_ganador", ganador_id=ganador.id))
+
+    nuevas_imagenes = [
+        archivo
+        for archivo in request.files.getlist("imagenes")
+        if archivo and archivo.filename
+    ]
+
+    urls_subidas = []
+
+    try:
+        for imagen in nuevas_imagenes:
+            urls_subidas.append(guardar_imagen_ganador(imagen))
+
+        ganador.titulo = titulo
+        ganador.descripcion = descripcion or None
+        ganador.fecha = fecha_ganador
+        ganador.activo = activo
+
+        orden = max(
+            (item.orden for item in ganador.multimedia),
+            default=-1
+        ) + 1
+
+        for url in urls_subidas:
+            db.session.add(
+                GanadorMultimedia(
+                    ganador_id=ganador.id,
+                    tipo="imagen",
+                    url=url,
+                    orden=orden
+                )
+            )
+            orden += 1
+
+        for url in urls_videos:
+            db.session.add(
+                GanadorMultimedia(
+                    ganador_id=ganador.id,
+                    tipo="video",
+                    url=url,
+                    orden=orden
+                )
+            )
+            orden += 1
+
+        db.session.commit()
+
+    except Exception as error:
+        db.session.rollback()
+
+        for url in urls_subidas:
+            try:
+                eliminar_archivo_supabase(url)
+            except Exception:
+                app.logger.exception(
+                    "No se pudo limpiar una imagen de Ganadores."
+                )
+
+        if isinstance(error, ValueError):
+            mensaje = str(error)
+        else:
+            app.logger.exception("Error al editar una publicación de Ganadores.")
+            mensaje = "No se pudieron guardar los cambios. Intentá nuevamente."
+
+        flash(mensaje, "error")
+        return redirect(url_for("editar_ganador", ganador_id=ganador.id))
+
+    flash("La publicación se actualizó correctamente.", "success")
+    return redirect(url_for("admin_ganadores"))
+
+
+@app.route(
+    "/admin/ganadores/<int:ganador_id>/multimedia/<int:multimedia_id>/eliminar",
+    methods=["POST"]
+)
+@admin_requerido
+def eliminar_multimedia_ganador(ganador_id, multimedia_id):
+
+    ganador = Ganador.query.get_or_404(ganador_id)
+
+    multimedia = GanadorMultimedia.query.filter_by(
+        id=multimedia_id,
+        ganador_id=ganador.id
+    ).first_or_404()
+
+    if multimedia.tipo == "imagen":
+        try:
+            eliminada = eliminar_archivo_supabase(multimedia.url)
+
+            if not eliminada:
+                flash(
+                    "No se pudo verificar la eliminación de la imagen en Supabase. "
+                    "El registro se conservó.",
+                    "error"
+                )
+                return redirect(
+                    url_for("editar_ganador", ganador_id=ganador.id)
+                )
+
+        except Exception:
+            app.logger.exception(
+                "Error al eliminar una imagen de Ganadores."
+            )
+            flash(
+                "No se pudo eliminar la imagen de Supabase. El registro se conservó.",
+                "error"
+            )
+            return redirect(
+                url_for("editar_ganador", ganador_id=ganador.id)
+            )
+
+    db.session.delete(multimedia)
+    db.session.commit()
+
+    flash("Archivo eliminado correctamente.", "success")
+
+    return redirect(
+        url_for("editar_ganador", ganador_id=ganador.id)
+    )
+
+
+@app.route(
+    "/admin/ganadores/<int:ganador_id>/eliminar",
+    methods=["POST"]
+)
+@admin_requerido
+def eliminar_ganador(ganador_id):
+
+    ganador = Ganador.query.get_or_404(ganador_id)
+
+    imagenes = [
+        item for item in ganador.multimedia
+        if item.tipo == "imagen"
+    ]
+
+    for imagen in imagenes:
+        try:
+            eliminada = eliminar_archivo_supabase(imagen.url)
+
+            if not eliminada:
+                flash(
+                    "No se pudo eliminar una de las imágenes en Supabase. "
+                    "La publicación se conservó.",
+                    "error"
+                )
+                return redirect(url_for("admin_ganadores"))
+
+        except Exception:
+            app.logger.exception(
+                "Error al eliminar imágenes de una publicación de Ganadores."
+            )
+            flash(
+                "Ocurrió un error al eliminar las imágenes. "
+                "La publicación se conservó.",
+                "error"
+            )
+            return redirect(url_for("admin_ganadores"))
+
+    db.session.delete(ganador)
+    db.session.commit()
+
+    flash("La publicación y sus archivos fueron eliminados.", "success")
+
+    return redirect(url_for("admin_ganadores"))
 
 
 @app.route(

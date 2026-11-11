@@ -26,3 +26,7 @@ vencer_participaciones.py
 
 # Archivos subidos por el administrador
 static/uploads/sorteos/*
+
+# Respaldos locales y copias de seguridad
+*.bak*
+respaldos/

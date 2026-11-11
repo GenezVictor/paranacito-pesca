@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {{ "Editar ganador" if ganador else "Nuevo ganador" }} | Paranacito Pesca
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+    <main class="admin-formulario admin-fotos-contenedor">
+
+        <a
+            href="{{ url_for('admin_ganadores') }}"
+            class="admin-volver"
+        >
+            ← Volver a ganadores
+        </a>
+
+        <span class="admin-subtitulo">PARANACITO PESCA</span>
+
+        <h1>
+            {{ "Editar publicación" if ganador else "Nuevo ganador" }}
+        </h1>
+
+        <p class="admin-formulario-ayuda">
+            Cargá la información y las pruebas de entrega del premio.
+        </p>
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% if mensajes %}
+                <div class="admin-mensajes">
+                    {% for categoria, mensaje in mensajes %}
+                        <div class="admin-mensaje admin-mensaje-{{ categoria }}">
+                            {{ mensaje }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data">
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+            <label for="titulo">Título de la publicación</label>
+
+            <input
+                type="text"
+                id="titulo"
+                name="titulo"
+                maxlength="150"
+                placeholder="Ej: Entrega del premio a nuestro ganador"
+                value="{{ ganador.titulo if ganador else '' }}"
+                required
+            >
+
+            <label for="descripcion">Descripción general</label>
+
+            <textarea
+                id="descripcion"
+                name="descripcion"
+                rows="5"
+                placeholder="Contá brevemente cómo fue la entrega del premio..."
+            >{{ ganador.descripcion if ganador and ganador.descripcion else '' }}</textarea>
+
+            <label for="fecha">Fecha de entrega o publicación</label>
+
+            <input
+                type="date"
+                id="fecha"
+                name="fecha"
+                value="{{ ganador.fecha.isoformat() if ganador else fecha_hoy }}"
+                required
+            >
+
+            <label class="admin-switch">
+                <input
+                    type="checkbox"
+                    name="activo"
+                    value="1"
+                    {% if not ganador or ganador.activo %}checked{% endif %}
+                >
+                Publicación visible para todos
+            </label>
+
+            <section class="admin-subir-fotos">
+
+                <h2>Fotografías</h2>
+
+                <p>
+                    Podés seleccionar varias imágenes.
+                    Formatos permitidos: JPG, JPEG, PNG y WEBP.
+                </p>
+
+                {% if ganador and imagenes %}
+
+                    <h3>Imágenes actuales</h3>
+
+                    <div class="admin-galeria-fotos">
+
+                        {% for imagen in imagenes %}
+
+                            <article class="admin-foto">
+
+                                <img
+                                    src="{{ imagen.url }}"
+                                    alt="Foto de {{ ganador.titulo }}"
+                                >
+
+                                <div class="foto-acciones">
+
+
+
+                                        <button form="eliminar-multimedia-{{ imagen.id }}"
+                                            type="submit"
+                                            class="foto-boton eliminar"
+                                        >
+                                            Eliminar imagen
+                                        </button>
+
+
+
+                                </div>
+
+                            </article>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+                <div class="nuevo-sorteo-upload">
+
+                    <label
+                        for="selector-imagenes"
+                        class="nuevo-sorteo-selector"
+                    >
+
+                        <span class="nuevo-sorteo-upload-icono">+</span>
+
+                        <strong>Agregar fotografías</strong>
+
+                        <small>Podés seleccionar varias imágenes</small>
+
+                    </label>
+
+                    <input
+                        type="file"
+                        id="selector-imagenes"
+                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        multiple
+                        hidden
+                    >
+
+                    <input
+                        type="file"
+                        name="imagenes"
+                        id="imagenes"
+                        multiple
+                        hidden
+                    >
+
+                </div>
+
+                <p id="contador-imagenes" class="nuevo-sorteo-contador">
+                    Ninguna imagen nueva seleccionada.
+                </p>
+
+                <div id="vista-previa"></div>
+
+            </section>
+
+            <section class="admin-subir-fotos admin-agregar-video">
+
+                <h2>Videos</h2>
+
+                <p>
+                    Pegá los enlaces de YouTube, Vimeo o videos directos.
+                    Si agregás varios, escribí uno por línea.
+                </p>
+
+                {% if ganador and videos %}
+
+                    <div class="admin-lista-videos">
+
+                        {% for video in videos %}
+
+                            <article class="admin-video-item">
+
+                                <div class="admin-video-info">
+
+                                    <strong>Video {{ loop.index }}</strong>
+
+                                    <span>{{ video.url }}</span>
+
+                                </div>
+
+                                <div class="admin-video-acciones">
+
+                                    <a
+                                        href="{{ video.url }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="foto-boton principal"
+                                    >
+                                        Abrir
+                                    </a>
+
+
+
+                                        <button form="eliminar-multimedia-{{ video.id }}"
+                                            type="submit"
+                                            class="foto-boton eliminar"
+                                        >
+                                            Eliminar
+                                        </button>
+
+
+
+                                </div>
+
+                            </article>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+                <label for="urls_videos">Nuevos enlaces de videos</label>
+
+                <textarea
+                    id="urls_videos"
+                    name="urls_videos"
+                    rows="4"
+                    placeholder="https://www.youtube.com/watch?v=...&#10;https://youtu.be/..."
+                ></textarea>
+
+            </section>
+
+            <div class="nuevo-sorteo-final">
+
+                <p>
+                    {{ "Los cambios se aplicarán a esta publicación." if ganador
+                       else "Podrás editar la publicación y su multimedia más adelante." }}
+                </p>
+
+                <button type="submit" class="nuevo-sorteo-crear">
+                    {{ "Guardar cambios" if ganador else "Crear publicación" }}
+                </button>
+
+            </div>
+
+        </form>
+
+
+        {% if ganador %}
+            {% for elemento in ganador.multimedia %}
+                <form
+                    id="eliminar-multimedia-{{ elemento.id }}"
+                    method="POST"
+                    action="{{ url_for(
+                        'eliminar_multimedia_ganador',
+                        ganador_id=ganador.id,
+                        multimedia_id=elemento.id
+                    ) }}"
+                    onsubmit="return confirm('¿Eliminar este elemento multimedia?');"
+                    hidden
+                >
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+                </form>
+            {% endfor %}
+        {% endif %}
+
+    </main>
+
+    <script>
+        const selector = document.getElementById("selector-imagenes");
+        const inputReal = document.getElementById("imagenes");
+        const vistaPrevia = document.getElementById("vista-previa");
+        const contador = document.getElementById("contador-imagenes");
+
+        let archivosSeleccionados = [];
+
+        selector.addEventListener("change", function () {
+
+            for (const archivo of selector.files) {
+
+                const repetido = archivosSeleccionados.some(
+                    existente =>
+                        existente.name === archivo.name &&
+                        existente.size === archivo.size &&
+                        existente.lastModified === archivo.lastModified
+                );
+
+                if (!repetido) {
+                    archivosSeleccionados.push(archivo);
+                }
+            }
+
+            selector.value = "";
+            actualizarArchivos();
+        });
+
+        function actualizarArchivos() {
+
+            const transferencia = new DataTransfer();
+
+            archivosSeleccionados.forEach(
+                archivo => transferencia.items.add(archivo)
+            );
+
+            inputReal.files = transferencia.files;
+
+            mostrarVistaPrevia();
+        }
+
+        function mostrarVistaPrevia() {
+
+            vistaPrevia.innerHTML = "";
+
+            if (archivosSeleccionados.length === 0) {
+
+                contador.textContent =
+                    "Ninguna imagen nueva seleccionada.";
+
+                return;
+            }
+
+            contador.textContent =
+                archivosSeleccionados.length +
+                (
+                    archivosSeleccionados.length === 1
+                        ? " imagen seleccionada."
+                        : " imágenes seleccionadas."
+                );
+
+            archivosSeleccionados.forEach((archivo, indice) => {
+
+                const contenedor = document.createElement("div");
+                contenedor.className = "imagen-seleccionada";
+
+                const imagen = document.createElement("img");
+                imagen.src = URL.createObjectURL(archivo);
+                imagen.alt = archivo.name;
+
+                const boton = document.createElement("button");
+                boton.type = "button";
+                boton.textContent = "×";
+                boton.title = "Quitar imagen";
+
+                boton.addEventListener("click", function () {
+
+                    URL.revokeObjectURL(imagen.src);
+
+                    archivosSeleccionados.splice(indice, 1);
+
+                    actualizarArchivos();
+                });
+
+                contenedor.appendChild(imagen);
+                contenedor.appendChild(boton);
+
+                vistaPrevia.appendChild(contenedor);
+            });
+        }
+    </script>
+
+</body>
+</html>

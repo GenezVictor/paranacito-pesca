@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Conocé a los ganadores de Paranacito Pesca y mirá las fotos y videos de sus premios.">
+    <title>Ganadores | Paranacito Pesca</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .ganadores-pagina {
+            width: min(1100px, 92%);
+            margin: 35px auto;
+        }
+
+        .ganadores-encabezado {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .ganadores-encabezado h1 {
+            margin-bottom: 10px;
+        }
+
+        .ganadores-volver {
+            display: inline-block;
+            margin-top: 15px;
+            color: inherit;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .ganadores-lista {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        .ganador-publicacion {
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        .ganador-publicacion h2 {
+            margin-top: 0;
+        }
+
+        .ganador-fecha {
+            opacity: .75;
+            font-size: .9rem;
+            margin-bottom: 15px;
+        }
+
+        .ganador-descripcion {
+            line-height: 1.6;
+            white-space: pre-line;
+            margin-bottom: 20px;
+        }
+
+        .ganador-galeria {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .ganador-foto {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+            border-radius: 10px;
+            display: block;
+        }
+
+        .ganador-videos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .ganador-video {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .ganador-video iframe,
+        .ganador-video video {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        .ganador-enlace-video {
+            display: inline-block;
+            padding: 12px 18px;
+            border-radius: 8px;
+            background: #f5a623;
+            color: #111;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .ganadores-vacio {
+            text-align: center;
+            padding: 45px 20px;
+        }
+
+        @media (max-width: 600px) {
+            .ganador-publicacion {
+                padding: 16px;
+            }
+
+            .ganador-videos {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="ganadores-pagina">
+
+        <header class="ganadores-encabezado">
+            <h1>🏆 Nuestros ganadores</h1>
+            <p>Conocé a quienes ya disfrutaron de sus premios en Paranacito Pesca.</p>
+            <a class="ganadores-volver" href="{{ url_for('inicio') }}">
+                ← Volver a los sorteos
+            </a>
+        </header>
+
+        {% if ganadores %}
+            <section class="ganadores-lista">
+
+                {% for ganador in ganadores %}
+                    <article class="sorteo-card ganador-publicacion">
+
+                        <h2>{{ ganador.titulo }}</h2>
+
+                        <p class="ganador-fecha">
+                            {{ ganador.fecha.strftime('%d/%m/%Y') }}
+                        </p>
+
+                        {% if ganador.descripcion %}
+                            <div class="ganador-descripcion">
+                                {{ ganador.descripcion }}
+                            </div>
+                        {% endif %}
+
+                        {% set imagenes = ganador.multimedia | selectattr("tipo", "equalto", "imagen") | list %}
+
+                        {% if imagenes %}
+                            <div class="ganador-galeria">
+                                {% for imagen in imagenes %}
+                                    <img
+                                        class="ganador-foto"
+                                        src="{{ imagen.url }}"
+                                        alt="Foto del ganador: {{ ganador.titulo }}"
+                                        loading="lazy"
+                                    >
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% set videos = ganador.multimedia | selectattr("tipo", "equalto", "video") | list %}
+
+                        {% if videos %}
+                            <div class="ganador-videos">
+                                {% for item in videos %}
+                                    {% set reproductor = preparar_video_ganador(item.url) %}
+
+                                    {% if reproductor.tipo in ["youtube", "vimeo"] %}
+                                        <div class="ganador-video">
+                                            <iframe
+                                                src="{{ reproductor.url }}"
+                                                title="Video del ganador: {{ ganador.titulo }}"
+                                                loading="lazy"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                referrerpolicy="strict-origin-when-cross-origin"
+                                                allowfullscreen
+                                            ></iframe>
+                                        </div>
+
+                                    {% elif reproductor.tipo == "directo" %}
+                                        <div class="ganador-video">
+                                            <video controls preload="metadata">
+                                                <source src="{{ reproductor.url }}">
+                                                Tu navegador no puede reproducir este video.
+                                            </video>
+                                        </div>
+
+                                    {% elif reproductor.url %}
+                                        <a
+                                            class="ganador-enlace-video"
+                                            href="{{ reproductor.url }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            ▶ Ver video
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                    </article>
+                {% endfor %}
+
+            </section>
+        {% else %}
+            <section class="ganadores-vacio">
+                <h2>Próximamente</h2>
+                <p>Todavía no hay ganadores publicados. ¡Estate atento a nuestros sorteos!</p>
+            </section>
+        {% endif %}
+
+    </main>
+
+</body>
+</html>
