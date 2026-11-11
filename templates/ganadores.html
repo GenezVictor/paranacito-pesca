@@ -56,19 +56,94 @@
             margin-bottom: 20px;
         }
 
+        /* Galería moderna de fotografías de ganadores */
         .ganador-galeria {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-            margin: 20px 0;
+            width: min(100%, 760px);
+            margin: 24px auto 12px;
         }
 
-        .ganador-foto {
+        .ganador-galeria .galeria-principal {
+            height: clamp(240px, 52vw, 420px);
+            background: linear-gradient(145deg, #080b09, #171d19);
+            border: 1px solid rgba(255, 181, 46, 0.18);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+            overflow: hidden;
+        }
+
+        .ganador-galeria .imagen-principal {
             width: 100%;
-            aspect-ratio: 4 / 3;
-            object-fit: cover;
-            border-radius: 10px;
+            height: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            object-fit: contain;
             display: block;
+            transition: opacity 0.2s ease;
+        }
+
+        .ganador-galeria .galeria-flecha {
+            width: 42px;
+            height: 42px;
+            background: rgba(0, 0, 0, 0.72);
+            border-color: rgba(255, 181, 46, 0.55);
+            color: #ffb52e;
+            backdrop-filter: blur(6px);
+        }
+
+        .ganador-galeria .galeria-flecha.anterior {
+            left: 12px;
+        }
+
+        .ganador-galeria .galeria-flecha.siguiente {
+            right: 12px;
+        }
+
+        .ganador-galeria .galeria-miniaturas {
+            justify-content: center;
+            gap: 10px;
+            margin-top: 14px;
+            padding: 4px 2px 10px;
+        }
+
+        .ganador-galeria .miniatura {
+            flex: 0 0 82px;
+            width: 82px;
+            height: 64px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            background: #171d19;
+            opacity: 0.65;
+            transition: opacity 0.2s ease, border-color 0.2s ease,
+                        transform 0.2s ease;
+        }
+
+        .ganador-galeria .miniatura:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        .ganador-galeria .miniatura.activa {
+            opacity: 1;
+            border-color: #ffb52e;
+            box-shadow: 0 0 0 2px rgba(255, 181, 46, 0.15);
+        }
+
+        .ganador-galeria .miniatura img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 7px;
+        }
+
+        @media (max-width: 600px) {
+            .ganador-galeria .galeria-principal {
+                height: 280px;
+            }
+
+            .ganador-galeria .galeria-miniaturas {
+                justify-content: flex-start;
+            }
         }
 
         .ganador-videos {
@@ -118,6 +193,122 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Visor ampliado de fotografías */
+        .visor-fotos-ganadores {
+            width: min(96vw, 1200px);
+            max-width: none;
+            max-height: 94vh;
+            padding: 0;
+            border: 1px solid rgba(255, 181, 46, .25);
+            border-radius: 18px;
+            background: #101410;
+            color: white;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, .6);
+        }
+
+        .visor-fotos-ganadores::backdrop {
+            background: rgba(0, 0, 0, .88);
+            backdrop-filter: blur(8px);
+        }
+
+        .visor-contenido {
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            max-height: 850px;
+        }
+
+        .visor-barra {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #171d19;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+
+        .visor-barra button {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255,181,46,.35);
+            border-radius: 10px;
+            background: #252d27;
+            color: #ffb52e;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background .2s, transform .2s;
+        }
+
+        .visor-barra button:hover {
+            background: #39443b;
+            transform: translateY(-2px);
+        }
+
+        .visor-barra .visor-cerrar {
+            margin-left: 8px;
+            background: #8f302b;
+            color: white;
+            border-color: transparent;
+        }
+
+        .visor-escenario {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #080b09;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .visor-escenario:active {
+            cursor: grabbing;
+        }
+
+        .visor-escenario img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            user-select: none;
+            -webkit-user-drag: none;
+            transform: translate(0, 0) scale(1);
+            transform-origin: center;
+            will-change: transform;
+        }
+
+        .ganador-galeria .imagen-principal {
+            cursor: zoom-in;
+        }
+
+        @media (max-width: 600px) {
+            .visor-fotos-ganadores {
+                width: 96vw;
+                max-height: 92vh;
+                border-radius: 12px;
+            }
+
+            .visor-contenido {
+                height: 82vh;
+            }
+
+            .visor-barra {
+                padding: 9px;
+                gap: 7px;
+            }
+
+            .visor-barra button {
+                width: 38px;
+                height: 38px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -153,15 +344,47 @@
                         {% set imagenes = ganador.multimedia | selectattr("tipo", "equalto", "imagen") | list %}
 
                         {% if imagenes %}
-                            <div class="ganador-galeria">
-                                {% for imagen in imagenes %}
+                            <div class="galeria ganador-galeria">
+                                <div class="galeria-principal">
                                     <img
-                                        class="ganador-foto"
-                                        src="{{ imagen.url }}"
+                                        class="imagen-principal"
+                                        src="{{ imagenes[0].url }}"
                                         alt="Foto del ganador: {{ ganador.titulo }}"
                                         loading="lazy"
                                     >
-                                {% endfor %}
+
+                                    {% if imagenes|length > 1 %}
+                                        <button
+                                            type="button"
+                                            class="galeria-flecha anterior"
+                                            aria-label="Foto anterior"
+                                        >&#10094;</button>
+
+                                        <button
+                                            type="button"
+                                            class="galeria-flecha siguiente"
+                                            aria-label="Foto siguiente"
+                                        >&#10095;</button>
+                                    {% endif %}
+                                </div>
+
+                                {% if imagenes|length > 1 %}
+                                    <div class="galeria-miniaturas">
+                                        {% for imagen in imagenes %}
+                                            <button
+                                                type="button"
+                                                class="miniatura {% if loop.first %}activa{% endif %}"
+                                                aria-label="Ver foto {{ loop.index }}"
+                                            >
+                                                <img
+                                                    src="{{ imagen.url }}"
+                                                    alt="Foto {{ loop.index }} de {{ ganador.titulo }}"
+                                                    loading="lazy"
+                                                >
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                         {% endif %}
 
@@ -218,6 +441,177 @@
         {% endif %}
 
     </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+
+    <dialog
+        class="visor-fotos-ganadores"
+        id="visor-fotos-ganadores"
+        aria-label="Visor de fotografías"
+    >
+        <div class="visor-contenido">
+            <div class="visor-barra">
+                <button type="button" id="visor-alejar" aria-label="Alejar">−</button>
+                <button type="button" id="visor-acercar" aria-label="Acercar">+</button>
+                <button type="button" id="visor-restablecer" aria-label="Restablecer zoom">↺</button>
+                <button type="button" class="visor-cerrar" id="visor-cerrar" aria-label="Cerrar">✕</button>
+            </div>
+
+            <div class="visor-escenario" id="visor-escenario">
+                <img id="visor-imagen" src="" alt="">
+            </div>
+        </div>
+    </dialog>
+
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const visor = document.getElementById("visor-fotos-ganadores");
+        const imagenVisor = document.getElementById("visor-imagen");
+        const escenario = document.getElementById("visor-escenario");
+
+        if (!visor || !imagenVisor || !escenario) return;
+
+        const acercar = document.getElementById("visor-acercar");
+        const alejar = document.getElementById("visor-alejar");
+        const restablecer = document.getElementById("visor-restablecer");
+        const cerrar = document.getElementById("visor-cerrar");
+
+        let escala = 1;
+        let desplazamientoX = 0;
+        let desplazamientoY = 0;
+        let punteros = new Map();
+        let distanciaInicial = 0;
+        let escalaInicial = 1;
+        let posicionInicial = null;
+
+        function actualizarTransformacion() {
+            imagenVisor.style.transform =
+                `translate(${desplazamientoX}px, ${desplazamientoY}px) scale(${escala})`;
+        }
+
+        function cambiarZoom(cantidad) {
+            escala = Math.max(1, Math.min(4, escala + cantidad));
+
+            if (escala === 1) {
+                desplazamientoX = 0;
+                desplazamientoY = 0;
+            }
+
+            actualizarTransformacion();
+        }
+
+        function reiniciarZoom() {
+            escala = 1;
+            desplazamientoX = 0;
+            desplazamientoY = 0;
+            actualizarTransformacion();
+        }
+
+        function abrirVisor(imagen) {
+            imagenVisor.src = imagen.src;
+            imagenVisor.alt = imagen.alt || "Fotografía ampliada";
+            reiniciarZoom();
+            visor.showModal();
+        }
+
+        document.querySelectorAll(
+            ".ganador-galeria .imagen-principal"
+        ).forEach(function (imagen) {
+            imagen.addEventListener("click", function () {
+                abrirVisor(imagen);
+            });
+        });
+
+        acercar.addEventListener("click", () => cambiarZoom(0.35));
+        alejar.addEventListener("click", () => cambiarZoom(-0.35));
+        restablecer.addEventListener("click", reiniciarZoom);
+        cerrar.addEventListener("click", () => visor.close());
+
+        visor.addEventListener("click", function (evento) {
+            if (evento.target === visor) visor.close();
+        });
+
+        visor.addEventListener("close", function () {
+            reiniciarZoom();
+            punteros.clear();
+        });
+
+        escenario.addEventListener("wheel", function (evento) {
+            evento.preventDefault();
+            cambiarZoom(evento.deltaY < 0 ? 0.2 : -0.2);
+        }, { passive: false });
+
+        escenario.addEventListener("pointerdown", function (evento) {
+            evento.preventDefault();
+            escenario.setPointerCapture(evento.pointerId);
+            punteros.set(evento.pointerId, {
+                x: evento.clientX,
+                y: evento.clientY
+            });
+
+            if (punteros.size === 1) {
+                posicionInicial = {
+                    x: evento.clientX - desplazamientoX,
+                    y: evento.clientY - desplazamientoY
+                };
+            } else if (punteros.size === 2) {
+                const puntos = Array.from(punteros.values());
+                distanciaInicial = Math.hypot(
+                    puntos[0].x - puntos[1].x,
+                    puntos[0].y - puntos[1].y
+                );
+                escalaInicial = escala;
+            }
+        });
+
+        escenario.addEventListener("pointermove", function (evento) {
+            if (!punteros.has(evento.pointerId)) return;
+
+            punteros.set(evento.pointerId, {
+                x: evento.clientX,
+                y: evento.clientY
+            });
+
+            if (punteros.size === 2) {
+                const puntos = Array.from(punteros.values());
+                const distancia = Math.hypot(
+                    puntos[0].x - puntos[1].x,
+                    puntos[0].y - puntos[1].y
+                );
+
+                if (distanciaInicial > 0) {
+                    escala = Math.max(
+                        1,
+                        Math.min(4, escalaInicial * distancia / distanciaInicial)
+                    );
+
+                    if (escala === 1) {
+                        desplazamientoX = 0;
+                        desplazamientoY = 0;
+                    }
+
+                    actualizarTransformacion();
+                }
+            } else if (punteros.size === 1 && escala > 1 && posicionInicial) {
+                desplazamientoX = evento.clientX - posicionInicial.x;
+                desplazamientoY = evento.clientY - posicionInicial.y;
+                actualizarTransformacion();
+            }
+        });
+
+        function liberarPuntero(evento) {
+            punteros.delete(evento.pointerId);
+            posicionInicial = null;
+            distanciaInicial = 0;
+        }
+
+        escenario.addEventListener("pointerup", liberarPuntero);
+        escenario.addEventListener("pointercancel", liberarPuntero);
+    });
+    </script>
+
 
 </body>
 </html>
